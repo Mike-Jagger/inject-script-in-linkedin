@@ -2,7 +2,6 @@ const puppeteer = require('puppeteer');
 const fs = require('fs');
 const path = require('path');
 const readline = require('readline');
-const { timeout } = require('puppeteer');
 const { sleep } = require('./sleep');
 
 const COOKIES_PATH = './auth/testCookies.json';
@@ -253,7 +252,16 @@ async function moveToNextKeyword() {
         const browser = await puppeteer.launch({ headless: settings.shouldBrowseInHeadless });
         const page = await browser.newPage();
 
-        page.goto('https://www.linkedin.com/', { waitUntil: 'networkidle2' });
+        await page.goto(LOGIN_PAGE, { waitUntil: 'networkidle2' });
+
+        await loadCookiesAndLocalStorage(page);
+
+        page.goto('https://www.linkedin.com/');
+
+        await page.waitForSelector('button[aria-label="Click to start a search"]', { timeout: 5000 });
+        await page.click('button[aria-label="Click to start a search"]');
+        await page.type('input[aria-label="Search"]', currentKeyWord.keyword, { delay: 120 });
+        await page.keyboard.press('Enter');
 
         pagesOpened--;
     }
