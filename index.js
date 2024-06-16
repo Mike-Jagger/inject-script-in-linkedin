@@ -88,17 +88,20 @@ async function isLoginSuccessful(page) {
 }
 
 (async () => {
-    let browser;
-    const CheckerBrowser = await puppeteer.launch({ headless: false });
-    const page = await CheckerBrowser.newPage();
+    // LOGIN
+    console.log("\n1. LOGGING IN\n");
 
-    await page.goto(LOGIN_PAGE, { waitUntil: 'networkidle2' });
+    const CheckerBrowser = await puppeteer.launch({ headless: true });
+    let checkPage = await CheckerBrowser.newPage();
+
+    await checkPage.goto(LOGIN_PAGE, { waitUntil: 'networkidle2' });
 
     let isCookiesLoaded = false;
     try {
-        await loadCookiesAndLocalStorage(page);
-        await page.goto('https://www.linkedin.com/feed/');
-        isCookiesLoaded = await isLoginSuccessful(page);
+        console.log("Loading cookies...");
+        await loadCookiesAndLocalStorage(checkPage);
+        await checkPage.goto('https://www.linkedin.com/feed/');
+        isCookiesLoaded = await isLoginSuccessful(checkPage);
         if (isCookiesLoaded) {
             console.log('Cookies and Local Storage loaded successfully.');
         }
@@ -109,7 +112,7 @@ async function isLoginSuccessful(page) {
     await CheckerBrowser.close(); // Close browser to get to main program
 
     if (!isCookiesLoaded) {
-        console.log('Failed to load cookies/local storage. Please log in manually.');
+        console.log('\nFailed to load cookies/local storage. Please log in manually.');
         let loginSuccessful;
         do {
             let { newPage, newBrowser } = await login();
@@ -125,9 +128,13 @@ async function isLoginSuccessful(page) {
             await newBrowser.close();
 
         } while(!loginSuccessful);
-    } else {
-        console.log('Already logged in with loaded cookies.');
     }
 
-    // await browser.close();
+    // HEAD TO www.linkedin.com
+    console.log("\nGOTO LINKEDIN.COM\n");
+
+    const browser = await puppeteer.launch({ headless: false });
+    const page = await browser.newPage();
+
+    
 })();
