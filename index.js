@@ -237,9 +237,6 @@ async function moveToNextKeyword() {
     // HEAD TO www.linkedin.com
     console.log("\n2. GOTO LINKEDIN.COM\n");
 
-    const browser = await puppeteer.launch({ headless: settings.shouldBrowseInHeadless });
-    const page = await browser.newPage();
-
     await updateKeywordsFromFile();
     await moveToNextKeyword();
 
@@ -251,7 +248,8 @@ async function moveToNextKeyword() {
         currentKeyWord = jsonKeywords.currentKeyWord;
     }
 
-    console.log('Current Keyword:', currentKeyWord);
+    const browser = await puppeteer.launch({ headless: settings.shouldBrowseInHeadless });
+    const page = await browser.newPage();
 
     
 })();
