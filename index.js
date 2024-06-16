@@ -106,7 +106,8 @@ async function isLoginSuccessful(page) {
 
         const loginSuccessful = await isLoginSuccessful(newPage);
         if (loginSuccessful) {
-            await saveCookiesAndLocalStorage(page);
+            await sleep(5000);
+            await saveCookiesAndLocalStorage(newPage);
             console.log('Login successful and data saved.');
         } else {
             console.log('Login failed. Please check your credentials.');
