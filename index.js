@@ -3,8 +3,8 @@ const fs = require('fs');
 const path = require('path');
 const readline = require('readline');
 
-const COOKIES_PATH = 'cookies.json';
-const LOCAL_STORAGE_PATH = 'localStorage.json';
+const COOKIES_PATH = './auth/testCookies.json';
+const LOCAL_STORAGE_PATH = './auth/testLocalStorage.json';
 const LOGIN_PAGE = 'https://www.linkedin.com/login';
 
 async function loadCookiesAndLocalStorage(page) {
