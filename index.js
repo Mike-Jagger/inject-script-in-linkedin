@@ -41,7 +41,7 @@ async function saveCookiesAndLocalStorage(page) {
     fs.writeFileSync(LOCAL_STORAGE_PATH, JSON.stringify(localStorageData, null, 2));
 }
 
-async function login(browser) {
+async function login() {
     const rl = readline.createInterface({
         input: process.stdin,
         output: process.stdout
@@ -54,6 +54,8 @@ async function login(browser) {
     const username = await askQuestion('Enter your LinkedIn username (email): ');
     const password = await askQuestion('Enter your LinkedIn password: ');
     rl.close();
+
+    const browser = await puppeteer.launch({ headless: false });
 
     const page = await browser.newPage();
 
@@ -70,12 +72,15 @@ async function login(browser) {
         console.error("No two factor auth");
     }
 
-    return page;
+    return {
+        newPage: page,
+        newBrowser: browser
+    };
 }
 
 async function isLoginSuccessful(page) {
     try {
-        await page.waitForSelector('button[aria-label="Click to start a search"]', { timeout: 10000 });
+        await page.waitForSelector('button[aria-label="Click to start a search"]', { timeout: 5000 });
         return true;
     } catch (error) {
         return false;
@@ -105,21 +110,21 @@ async function isLoginSuccessful(page) {
 
     if (!isCookiesLoaded) {
         console.log('Failed to load cookies/local storage. Please log in manually.');
+        let loginSuccessful;
         do {
-            const newBrowser = await puppeteer.launch({ headless: false });
-            newPage = await login(newBrowser);
+            let { newPage, newBrowser } = await login();
 
-            const loginSuccessful = await isLoginSuccessful(newPage);
+            loginSuccessful = await isLoginSuccessful(newPage);
             if (loginSuccessful) {
                 await saveCookiesAndLocalStorage(newPage);
                 console.log('Login successful and data saved.');
             } else {
-                console.log('Login failed. Please check your credentials.');
+                console.log('\nLogin failed. Please check your credentials and try again.');
             }
 
             await newBrowser.close();
 
-        } while(loginSuccessful);
+        } while(!loginSuccessful);
     } else {
         console.log('Already logged in with loaded cookies.');
     }
