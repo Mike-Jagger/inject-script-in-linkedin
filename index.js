@@ -168,8 +168,7 @@ async function moveToNextKeyword() {
 
     if (fs.existsSync(jsonKeywordsPath)) {
         const jsonKeywords = JSON.parse(fs.readFileSync(jsonKeywordsPath, 'utf-8'));
-        const currentIndex = jsonKeywords.currentKeyWord.index || -1;
-
+        const currentIndex = jsonKeywords.currentKeyWord.index ?? -1;
         if (jsonKeywords.keyWords.length > 0) {
             const nextIndex = (currentIndex + 1) % jsonKeywords.keyWords.length;
             jsonKeywords.currentKeyWord = jsonKeywords.keyWords[nextIndex];
