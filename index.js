@@ -41,7 +41,7 @@ async function saveCookiesAndLocalStorage(page) {
     fs.writeFileSync(LOCAL_STORAGE_PATH, JSON.stringify(localStorageData, null, 2));
 }
 
-async function login(page) {
+async function login(browser) {
     const rl = readline.createInterface({
         input: process.stdin,
         output: process.stdout
@@ -55,6 +55,8 @@ async function login(page) {
     const password = await askQuestion('Enter your LinkedIn password: ');
     rl.close();
 
+    const page = await browser.newPage();
+
     await page.goto(LOGIN_PAGE, { waitUntil: 'networkidle2' });
     await page.type('#username', username);
     await page.type('#password', password);
@@ -67,6 +69,8 @@ async function login(page) {
     } catch (e) {
         console.error("No two factor auth");
     }
+
+    return page;
 }
 
 async function isLoginSuccessful(page) {
@@ -79,15 +83,16 @@ async function isLoginSuccessful(page) {
 }
 
 (async () => {
-    const browser = await puppeteer.launch({ headless: false });
-    const page = await browser.newPage();
+    let browser;
+    const CheckerBrowser = await puppeteer.launch({ headless: false });
+    const page = await CheckerBrowser.newPage();
 
     await page.goto(LOGIN_PAGE, { waitUntil: 'networkidle2' });
 
     let isCookiesLoaded = false;
     try {
         await loadCookiesAndLocalStorage(page);
-        await page.goto('https://www.linkedin.com/feed/', { waitUntil: 'networkidle2' });
+        await page.goto('https://www.linkedin.com/feed/');
         isCookiesLoaded = await isLoginSuccessful(page);
         if (isCookiesLoaded) {
             console.log('Cookies and Local Storage loaded successfully.');
@@ -96,24 +101,25 @@ async function isLoginSuccessful(page) {
         console.error('Error loading cookies/local storage:', error);
     }
 
+    await CheckerBrowser.close(); // Close browser to get to main program
+
     if (!isCookiesLoaded) {
-        await browser.close();
         console.log('Failed to load cookies/local storage. Please log in manually.');
+        do {
+            const newBrowser = await puppeteer.launch({ headless: false });
+            newPage = await login(newBrowser);
 
-        const newBrowser = await puppeteer.launch({ headless: false });
-        const newPage = await newBrowser.newPage();
-        await login(newPage);
+            const loginSuccessful = await isLoginSuccessful(newPage);
+            if (loginSuccessful) {
+                await saveCookiesAndLocalStorage(newPage);
+                console.log('Login successful and data saved.');
+            } else {
+                console.log('Login failed. Please check your credentials.');
+            }
 
-        const loginSuccessful = await isLoginSuccessful(newPage);
-        if (loginSuccessful) {
-            await sleep(5000);
-            await saveCookiesAndLocalStorage(newPage);
-            console.log('Login successful and data saved.');
-        } else {
-            console.log('Login failed. Please check your credentials.');
-        }
+            await newBrowser.close();
 
-        // await newBrowser.close();
+        } while(loginSuccessful);
     } else {
         console.log('Already logged in with loaded cookies.');
     }
