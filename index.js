@@ -60,8 +60,9 @@ async function login(page) {
     await page.click('button[type="submit"]');
 
     try{
-        await page.waitForSelector("two-step-challenge", { timeout: 6000 });
-        await page.waitForSelector('global-nav-search', { timeout: 60000 });
+        await page.waitForSelector('button[id="two-step-submit-button"]', { timeout: 10000 });
+        console.log("Waiting for 2FA");
+        await page.waitForSelector('button[aria-label="Click to start a search"]', { timeout: 60000 });
     } catch (e) {
         console.error("No two factor auth");
     }
@@ -69,7 +70,7 @@ async function login(page) {
 
 async function isLoginSuccessful(page) {
     try {
-        await page.waitForSelector('global-nav-search', { timeout: 10000 });
+        await page.waitForSelector('button[aria-label="Click to start a search"]', { timeout: 10000 });
         return true;
     } catch (error) {
         return false;
