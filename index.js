@@ -256,10 +256,18 @@ async function moveToNextKeyword() {
 
         await loadCookiesAndLocalStorage(page);
 
-        page.goto('https://www.linkedin.com/');
+        await page.goto('https://www.linkedin.com/');
 
-        await page.waitForSelector('button.msg-overlay-bubble-header__control', { timeout: 60000 });
-        await page.click('button.msg-overlay-bubble-header__control');
+        // Set the display of the element with id msg-overlay to none
+        await page.waitForSelector('aside[id="msg-overlay"]', { timeout: 60000 });
+        await sleep(2000);
+        await page.evaluate(() => {
+            const msgOverlay = document.getElementById('msg-overlay');
+            console.log(msgOverlay);
+            if (msgOverlay) {
+                msgOverlay.style.display = 'none';
+            }
+        });
 
         await page.waitForSelector('button[aria-label="Click to start a search"]', { timeout: 5000 });
         await page.click('button[aria-label="Click to start a search"]');
