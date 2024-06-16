@@ -6,6 +6,7 @@ const { timeout } = require('puppeteer');
 const { sleep } = require('./sleep');
 
 const COOKIES_PATH = './auth/testCookies.json';
+const SETTINGS_PATH = './testSettings.json';
 const LOCAL_STORAGE_PATH = './auth/testLocalStorage.json';
 const LOGIN_PAGE = 'https://www.linkedin.com/login';
 
@@ -21,6 +22,25 @@ function loadSettings() {
         const settingsData = JSON.parse(fs.readFileSync(SETTINGS_PATH, 'utf-8'));
         settings = settingsData.Settings;
     }
+}
+
+async function setupSettings() {
+    const rl = readline.createInterface({
+        input: process.stdin,
+        output: process.stdout
+    });
+
+    const askQuestion = (question) => {
+        return new Promise((resolve) => rl.question(question, resolve));
+    };
+
+    settings.shouldBrowseInHeadless = (await askQuestion('Do you want to browse in headless mode? (Y/N): ')).toLowerCase() === 'y';
+    settings.numberOfPagesOpened = parseInt(await askQuestion('How many browser pages do you want to open? (default: 1): ')) || 1;
+    settings.amountOfHoursRun = parseInt(await askQuestion('How many hours should the program run? (default: 2): ')) || 2;
+
+    rl.close();
+
+    fs.writeFileSync(SETTINGS_PATH, JSON.stringify({ Settings: settings }, null, 2));
 }
 
 async function loadCookiesAndLocalStorage(page) {
@@ -69,7 +89,7 @@ async function login() {
     const password = await askQuestion('Enter your LinkedIn password: ');
     rl.close();
 
-    const browser = await puppeteer.launch({ headless: false });
+    const browser = await puppeteer.launch({ headless: settings.shouldBrowseInHeadless });
 
     const page = await browser.newPage();
 
@@ -102,6 +122,12 @@ async function isLoginSuccessful(page) {
 }
 
 (async () => {
+    // SETTINGS
+    console.log("\n0. CHECK SETTINGS\n");
+    if (!fs.existsSync(SETTINGS_PATH)) {
+        await setupSettings();
+    }
+
     loadSettings();
 
     // LOGIN
@@ -149,7 +175,7 @@ async function isLoginSuccessful(page) {
     // HEAD TO www.linkedin.com
     console.log("\nGOTO LINKEDIN.COM\n");
 
-    const browser = await puppeteer.launch({ headless: false });
+    const browser = await puppeteer.launch({ headless: settings.shouldBrowseInHeadless });
     const page = await browser.newPage();
 
     
