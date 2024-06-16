@@ -33,7 +33,11 @@ async function setupSettings() {
     const askQuestion = (question) => {
         return new Promise((resolve) => rl.question(question, resolve));
     };
-
+    await sleep(2000);
+    console.log('WARNING: You will only be prompted to set the settings once!');
+    await sleep(3000);
+    console.log('BUT you can change them in the settings.json file\n');
+    await sleep(3000)
     settings.shouldBrowseInHeadless = (await askQuestion('Do you want to browse in headless mode? (Y/N): ')).toLowerCase() === 'y';
     settings.numberOfPagesOpened = parseInt(await askQuestion('How many browser pages do you want to open? (default: 1): ')) || 1;
     settings.amountOfHoursRun = parseInt(await askQuestion('How many hours should the program run? (default: 2): ')) || 2;
@@ -123,12 +127,13 @@ async function isLoginSuccessful(page) {
 
 (async () => {
     // SETTINGS
-    console.log("\n0. CHECK SETTINGS\n");
+    console.log("\n0. SETTINGS\n");
     if (!fs.existsSync(SETTINGS_PATH)) {
         await setupSettings();
     }
 
     loadSettings();
+    console.log("Settings loaded");
 
     // LOGIN
     console.log("\n1. LOGGING IN\n");
@@ -177,6 +182,8 @@ async function isLoginSuccessful(page) {
 
     const browser = await puppeteer.launch({ headless: settings.shouldBrowseInHeadless });
     const page = await browser.newPage();
+
+
 
     
 })();
