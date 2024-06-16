@@ -2,6 +2,7 @@ const puppeteer = require('puppeteer');
 const fs = require('fs');
 const path = require('path');
 const readline = require('readline');
+const { timeout } = require('puppeteer');
 
 const COOKIES_PATH = './auth/testCookies.json';
 const LOCAL_STORAGE_PATH = './auth/testLocalStorage.json';
@@ -57,14 +58,18 @@ async function login(page) {
     await page.type('#username', username);
     await page.type('#password', password);
     await page.click('button[type="submit"]');
-    await page.waitForNavigation({ waitUntil: 'networkidle2' });
 
-    await saveCookiesAndLocalStorage(page);
+    try{
+        await page.waitForSelector("two-step-challenge", { timeout: 6000 });
+        await page.waitForSelector('global-nav-search', { timeout: 60000 });
+    } catch (e) {
+        console.error("No two factor auth");
+    }
 }
 
 async function isLoginSuccessful(page) {
     try {
-        await page.waitForSelector('//div[contains(@class,"global-nav__me")]', { timeout: 15000 });
+        await page.waitForSelector('global-nav-search', { timeout: 10000 });
         return true;
     } catch (error) {
         return false;
@@ -99,15 +104,16 @@ async function isLoginSuccessful(page) {
 
         const loginSuccessful = await isLoginSuccessful(newPage);
         if (loginSuccessful) {
+            await saveCookiesAndLocalStorage(page);
             console.log('Login successful and data saved.');
         } else {
             console.log('Login failed. Please check your credentials.');
         }
 
-        await newBrowser.close();
+        // await newBrowser.close();
     } else {
         console.log('Already logged in with loaded cookies.');
     }
 
-    await browser.close();
+    // await browser.close();
 })();
