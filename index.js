@@ -258,9 +258,12 @@ async function moveToNextKeyword() {
 
         page.goto('https://www.linkedin.com/');
 
+        await page.waitForSelector('button.msg-overlay-bubble-header__control', { timeout: 60000 });
+        await page.click('button.msg-overlay-bubble-header__control');
+
         await page.waitForSelector('button[aria-label="Click to start a search"]', { timeout: 5000 });
         await page.click('button[aria-label="Click to start a search"]');
-        await page.type('input[aria-label="Search"]', currentKeyWord.keyword, { delay: 120 });
+        await page.type('input[aria-label="Search"]', currentKeyWord.keyword, { delay: 200 });
         await page.keyboard.press('Enter');
 
         pagesOpened--;
