@@ -3,6 +3,7 @@ const fs = require('fs');
 const path = require('path');
 const readline = require('readline');
 const { timeout } = require('puppeteer');
+const { sleep } = require('./sleep');
 
 const COOKIES_PATH = './auth/testCookies.json';
 const LOCAL_STORAGE_PATH = './auth/testLocalStorage.json';
