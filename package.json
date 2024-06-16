@@ -1,0 +1,11 @@
+{
+  "name": "inject-script-in-linkedin",
+  "version": "1.0.0",
+  "description": "Inject Scripts into LinkedIn",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC"
+}
