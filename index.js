@@ -178,7 +178,7 @@ async function isLoginSuccessful(page) {
     }
 
     // HEAD TO www.linkedin.com
-    console.log("\nGOTO LINKEDIN.COM\n");
+    console.log("\n2. GOTO LINKEDIN.COM\n");
 
     const browser = await puppeteer.launch({ headless: settings.shouldBrowseInHeadless });
     const page = await browser.newPage();
