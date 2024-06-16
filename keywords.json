@@ -1,4 +1,9 @@
 {
+    "Settings": {
+        "shouldBrowseInHeadless": false,
+        "numberOfPagesOpened": 1,
+        "amountOfHoursRun": 2
+    },
     "currentKeyWord": {},
     "keyWords": []
 }

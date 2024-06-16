@@ -9,6 +9,20 @@ const COOKIES_PATH = './auth/testCookies.json';
 const LOCAL_STORAGE_PATH = './auth/testLocalStorage.json';
 const LOGIN_PAGE = 'https://www.linkedin.com/login';
 
+// Load settings from JSON file
+let settings = {
+    shouldBrowseInHeadless: false,
+    numberOfPagesOpened: 1,
+    amountOfHoursRun: 2
+};
+
+function loadSettings() {
+    if (fs.existsSync(SETTINGS_PATH)) {
+        const settingsData = JSON.parse(fs.readFileSync(SETTINGS_PATH, 'utf-8'));
+        settings = settingsData.Settings;
+    }
+}
+
 async function loadCookiesAndLocalStorage(page) {
     if (fs.existsSync(COOKIES_PATH)) {
         const cookies = JSON.parse(fs.readFileSync(COOKIES_PATH, 'utf-8'));
@@ -88,6 +102,8 @@ async function isLoginSuccessful(page) {
 }
 
 (async () => {
+    loadSettings();
+
     // LOGIN
     console.log("\n1. LOGGING IN\n");
 
