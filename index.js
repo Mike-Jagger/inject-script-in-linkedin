@@ -65,7 +65,7 @@ async function login() {
     await page.click('button[type="submit"]');
 
     try{
-        await page.waitForSelector('button[id="two-step-submit-button"]', { timeout: 10000 });
+        await page.waitForSelector('button[id="two-step-submit-button"]', { timeout: 5000 });
         console.log("Waiting for 2FA");
         await page.waitForSelector('button[aria-label="Click to start a search"]', { timeout: 1800000 });
     } catch (e) {
