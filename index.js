@@ -67,7 +67,7 @@ async function login() {
     try{
         await page.waitForSelector('button[id="two-step-submit-button"]', { timeout: 10000 });
         console.log("Waiting for 2FA");
-        await page.waitForSelector('button[aria-label="Click to start a search"]', { timeout: 60000 });
+        await page.waitForSelector('button[aria-label="Click to start a search"]', { timeout: 1800000 });
     } catch (e) {
         console.error("No two factor auth");
     }
