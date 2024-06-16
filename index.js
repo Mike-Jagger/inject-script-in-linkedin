@@ -62,6 +62,15 @@ async function login(page) {
     await saveCookiesAndLocalStorage(page);
 }
 
+async function isLoginSuccessful(page) {
+    try {
+        await page.waitForSelector('//div[contains(@class,"global-nav__me")]', { timeout: 15000 });
+        return true;
+    } catch (error) {
+        return false;
+    }
+}
+
 (async () => {
     const browser = await puppeteer.launch({ headless: false });
     const page = await browser.newPage();
@@ -72,8 +81,8 @@ async function login(page) {
     try {
         await loadCookiesAndLocalStorage(page);
         await page.goto('https://www.linkedin.com/feed/', { waitUntil: 'networkidle2' });
-        if (page.url().includes('feed')) {
-            isCookiesLoaded = true;
+        isCookiesLoaded = await isLoginSuccessful(page);
+        if (isCookiesLoaded) {
             console.log('Cookies and Local Storage loaded successfully.');
         }
     } catch (error) {
@@ -88,7 +97,13 @@ async function login(page) {
         const newPage = await newBrowser.newPage();
         await login(newPage);
 
-        console.log('Login successful and data saved.');
+        const loginSuccessful = await isLoginSuccessful(newPage);
+        if (loginSuccessful) {
+            console.log('Login successful and data saved.');
+        } else {
+            console.log('Login failed. Please check your credentials.');
+        }
+
         await newBrowser.close();
     } else {
         console.log('Already logged in with loaded cookies.');
