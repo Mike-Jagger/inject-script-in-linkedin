@@ -199,6 +199,7 @@ async function executeTestScriptInConsole(page, scriptPath) {
         await page.keyboard.up('Control');
         await page.keyboard.up('Shift');
     }
+    console.log("Console opened");
 
     // Wait for the console to open
     await sleep(2000);
@@ -207,12 +208,18 @@ async function executeTestScriptInConsole(page, scriptPath) {
     await page.evaluate(() => {
         console.clear();
     });
+    console.log("Console cleared");
+
+
+    console.log("\n3. EXECUTE SCRIPT\n");
 
     // Read the test script
     const scriptContent = fs.readFileSync(scriptPath, 'utf-8');
+    console.log("Script loaded");
 
     // Execute the script in the console
     await page.evaluate(scriptContent);
+    console.log("Script executed");
 }
 
 (async () => {
@@ -320,6 +327,8 @@ async function executeTestScriptInConsole(page, scriptPath) {
 
         await clickButton(page, ['Posts']);
 
+        // OPEN AND CLEAR CONSOLE
+        console.log("\n3. OPEN AND CLEAR CONSOLE\n");
         await executeTestScriptInConsole(page, TEST_SCRIPT);
 
         pagesOpened--;
