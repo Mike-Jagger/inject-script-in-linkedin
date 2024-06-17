@@ -6,11 +6,11 @@ const readline = require('readline');
 const { sleep } = require('./sleep');
 const { clickButton } = require('./clickButton');
 
-const COOKIES_PATH = './auth/testCookies.json';
-const SETTINGS_PATH = './testSettings.json';
-const LOCAL_STORAGE_PATH = './auth/testLocalStorage.json';
+const COOKIES_PATH = './auth/cookies.json';
+const SETTINGS_PATH = './settings.json';
+const LOCAL_STORAGE_PATH = './auth/localStorage.json';
 const TXT_KEYWORDS = './keywords.txt';
-const JSON_KEYWORDS = './testKeywords.json';
+const JSON_KEYWORDS = './keywords.json';
 const TEST_SCRIPT = './test.js';
 const LOGIN_PAGE = 'https://www.linkedin.com/login';
 
