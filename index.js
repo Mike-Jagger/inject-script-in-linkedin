@@ -272,7 +272,7 @@ async function performAutomationTask(currentKeyWord) {
     await browser.close();
 }
 
-(async () => {
+async function main() {
     // SETTINGS
     console.log("\n0. SETTINGS\n");
     if (!fs.existsSync(SETTINGS_PATH)) {
@@ -342,4 +342,14 @@ async function performAutomationTask(currentKeyWord) {
     await Promise.all(
         Array.from({ length: settings.numberOfPagesOpened }, () => performAutomationTask(currentKeyWord))
     );
-})();
+}
+
+// Schedule the main function to run at 8 am Pacific Time every day
+const job = schedule.scheduleJob('0 8 * * *', () => {
+    main().catch(console.error);
+});
+
+// Manually run the script immediately if needed for testing
+if (process.argv.includes('--run-now')) {
+    main().catch(console.error);
+}
