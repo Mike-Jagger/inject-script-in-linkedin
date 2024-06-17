@@ -283,7 +283,12 @@ async function executeTestScriptInConsole(page, scriptPath) {
 
     let pagesOpened = settings.numberOfPagesOpened;
     while (pagesOpened > 0) {
-        const browser = await puppeteer.launch({ headless: settings.shouldBrowseInHeadless });
+        const browser = await puppeteer.launch({ 
+            headless: settings.shouldBrowseInHeadless,
+            defaultViewport: null, //Defaults to an 800x600 viewport
+            args:['--start-maximized' ]
+        });
+
         const page = await browser.newPage();
 
         await page.goto(LOGIN_PAGE, { waitUntil: 'networkidle2' });
@@ -304,7 +309,11 @@ async function executeTestScriptInConsole(page, scriptPath) {
         });
 
         await page.waitForSelector('button[aria-label="Click to start a search"]', { timeout: 5000 });
-        await page.click('button[aria-label="Click to start a search"]');
+        try {
+            await page.click('button[aria-label="Click to start a search"]');
+        } catch(e) {
+            console.error("No search button found");
+        }
         await page.type('input[aria-label="Search"]', currentKeyWord.keyword, { delay: 200 });
         await page.keyboard.press('Enter');
         await sleep(2000);
