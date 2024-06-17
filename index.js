@@ -222,6 +222,55 @@ async function executeTestScriptInConsole(page, scriptPath) {
     console.log("Script executed");
 }
 
+async function performAutomationTask() {
+    const browser = await puppeteer.launch({ 
+        headless: settings.shouldBrowseInHeadless,
+        defaultViewport: null, //Defaults to an 800x600 viewport
+        args:['--start-maximized' ]
+    });
+
+    const page = await browser.newPage();
+
+    await page.goto(LOGIN_PAGE, { waitUntil: 'networkidle2' });
+
+    await loadCookiesAndLocalStorage(page);
+
+    await page.goto('https://www.linkedin.com/');
+
+    // Set the display of the element with id msg-overlay to none
+    await page.waitForSelector('aside[id="msg-overlay"]', { timeout: 60000 });
+    await sleep(2000);
+    await page.evaluate(() => {
+        const msgOverlay = document.getElementById('msg-overlay');
+        console.log(msgOverlay);
+        if (msgOverlay) {
+            msgOverlay.style.display = 'none';
+        }
+    });
+
+    await page.waitForSelector('button[aria-label="Click to start a search"]', { timeout: 5000 });
+    try {
+        await page.click('button[aria-label="Click to start a search"]');
+    } catch(e) {
+        console.error("No search button found");
+    }
+    await page.type('input[aria-label="Search"]', currentKeyWord.keyword, { delay: 200 });
+    await page.keyboard.press('Enter');
+    await sleep(2000);
+
+    await clickButton(page, ['Posts']);
+
+    // OPEN AND CLEAR CONSOLE
+    console.log("\n3. OPEN AND CLEAR CONSOLE\n");
+    await executeTestScriptInConsole(page, TEST_SCRIPT);
+
+    // Close browser after the specified duration
+    console.log("\n4. MAKE CODE RUN FOR SPECIFIED HOURS\n");
+    await sleep(settings.amountOfHoursRun * 60 * 60 * 1000);
+    console.log(`Program ending after executing for ${settings.amountOfHoursRun} hours`);
+    await browser.close();
+}
+
 (async () => {
     // SETTINGS
     console.log("\n0. SETTINGS\n");
@@ -288,55 +337,8 @@ async function executeTestScriptInConsole(page, scriptPath) {
         currentKeyWord = jsonKeywords.currentKeyWord;
     }
 
-    let pagesOpened = settings.numberOfPagesOpened;
-    while (pagesOpened > 0) {
-        const browser = await puppeteer.launch({ 
-            headless: settings.shouldBrowseInHeadless,
-            defaultViewport: null, //Defaults to an 800x600 viewport
-            args:['--start-maximized' ]
-        });
-
-        const page = await browser.newPage();
-
-        await page.goto(LOGIN_PAGE, { waitUntil: 'networkidle2' });
-
-        await loadCookiesAndLocalStorage(page);
-
-        await page.goto('https://www.linkedin.com/');
-
-        // Set the display of the element with id msg-overlay to none
-        await page.waitForSelector('aside[id="msg-overlay"]', { timeout: 60000 });
-        await sleep(2000);
-        await page.evaluate(() => {
-            const msgOverlay = document.getElementById('msg-overlay');
-            console.log(msgOverlay);
-            if (msgOverlay) {
-                msgOverlay.style.display = 'none';
-            }
-        });
-
-        await page.waitForSelector('button[aria-label="Click to start a search"]', { timeout: 5000 });
-        try {
-            await page.click('button[aria-label="Click to start a search"]');
-        } catch(e) {
-            console.error("No search button found");
-        }
-        await page.type('input[aria-label="Search"]', currentKeyWord.keyword, { delay: 200 });
-        await page.keyboard.press('Enter');
-        await sleep(2000);
-
-        await clickButton(page, ['Posts']);
-
-        // OPEN AND CLEAR CONSOLE
-        console.log("\n3. OPEN AND CLEAR CONSOLE\n");
-        await executeTestScriptInConsole(page, TEST_SCRIPT);
-
-        // Close browser after the specified duration
-        console.log("\n4. MAKE CODE RUN FOR SPECIFIED HOURS\n");
-        await sleep(settings.amountOfHoursRun * 60 * 60 * 1000);
-        console.log(`Program ending after executing for ${settings.amountOfHoursRun} hours`);
-        await browser.close();
-
-        pagesOpened--;
-    }
+    // Open multiple browser instances concurrently
+    await Promise.all(
+        Array.from({ length: settings.numberOfPagesOpened }, () => performAutomationTask())
+    );
 })();
