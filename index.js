@@ -331,6 +331,12 @@ async function executeTestScriptInConsole(page, scriptPath) {
         console.log("\n3. OPEN AND CLEAR CONSOLE\n");
         await executeTestScriptInConsole(page, TEST_SCRIPT);
 
+        // Close browser after the specified duration
+        console.log("\n4. MAKE CODE RUN FOR SPECIFIED HOURS\n");
+        await sleep(settings.amountOfHoursRun * 60 * 60 * 1000);
+        console.log(`Program ending after executing for ${settings.amountOfHoursRun} hours`);
+        await browser.close();
+
         pagesOpened--;
     }
 })();
