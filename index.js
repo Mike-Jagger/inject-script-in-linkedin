@@ -222,7 +222,7 @@ async function executeTestScriptInConsole(page, scriptPath) {
     console.log("Script executed");
 }
 
-async function performAutomationTask() {
+async function performAutomationTask(currentKeyWord) {
     const browser = await puppeteer.launch({ 
         headless: settings.shouldBrowseInHeadless,
         defaultViewport: null, //Defaults to an 800x600 viewport
@@ -267,6 +267,7 @@ async function performAutomationTask() {
     // Close browser after the specified duration
     console.log("\n4. MAKE CODE RUN FOR SPECIFIED HOURS\n");
     await sleep(settings.amountOfHoursRun * 60 * 60 * 1000);
+    // await sleep(10000);
     console.log(`Program ending after executing for ${settings.amountOfHoursRun} hours`);
     await browser.close();
 }
@@ -339,6 +340,6 @@ async function performAutomationTask() {
 
     // Open multiple browser instances concurrently
     await Promise.all(
-        Array.from({ length: settings.numberOfPagesOpened }, () => performAutomationTask())
+        Array.from({ length: settings.numberOfPagesOpened }, () => performAutomationTask(currentKeyWord))
     );
 })();
