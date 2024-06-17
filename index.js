@@ -201,7 +201,7 @@ async function executeTestScriptInConsole(page, scriptPath) {
     }
 
     // Wait for the console to open
-    await page.waitForTimeout(1000);
+    await sleep(2000);
 
     // Clear the console
     await page.evaluate(() => {
