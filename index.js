@@ -3,12 +3,14 @@ const fs = require('fs');
 const path = require('path');
 const readline = require('readline');
 const { sleep } = require('./sleep');
+const { clickButton } = require('./clickButton');
 
 const COOKIES_PATH = './auth/testCookies.json';
 const SETTINGS_PATH = './testSettings.json';
 const LOCAL_STORAGE_PATH = './auth/testLocalStorage.json';
 const TXT_KEYWORDS = './keywords.txt';
 const JSON_KEYWORDS = './testKeywords.json';
+const TEST_SCRIPT = './test.js';
 const LOGIN_PAGE = 'https://www.linkedin.com/login';
 
 // Load settings from JSON file
@@ -181,6 +183,37 @@ async function moveToNextKeyword() {
     }
 }
 
+async function executeTestScriptInConsole(page, scriptPath) {
+    // Open the console
+    if (os.platform() === 'darwin') { // macOS
+        await page.keyboard.down('Meta');
+        await page.keyboard.press('Option');
+        await page.keyboard.press('J');
+        await page.keyboard.up('Meta');
+        await page.keyboard.up('Option');
+    } else if (os.platform() === 'win32') { // Windows
+        await page.keyboard.down('Control');
+        await page.keyboard.press('Shift');
+        await page.keyboard.press('J');
+        await page.keyboard.up('Control');
+        await page.keyboard.up('Shift');
+    }
+
+    // Wait for the console to open
+    await page.waitForTimeout(1000);
+
+    // Clear the console
+    await page.evaluate(() => {
+        console.clear();
+    });
+
+    // Read the test script
+    const scriptContent = fs.readFileSync(scriptPath, 'utf-8');
+
+    // Execute the script in the console
+    await page.evaluate(scriptContent);
+}
+
 (async () => {
     // SETTINGS
     console.log("\n0. SETTINGS\n");
@@ -273,6 +306,11 @@ async function moveToNextKeyword() {
         await page.click('button[aria-label="Click to start a search"]');
         await page.type('input[aria-label="Search"]', currentKeyWord.keyword, { delay: 200 });
         await page.keyboard.press('Enter');
+        await sleep(2000);
+
+        await clickButton(page, ['Posts']);
+
+        await executeTestScriptInConsole(page, TEST_SCRIPT);
 
         pagesOpened--;
     }
