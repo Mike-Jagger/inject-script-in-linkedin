@@ -2,4 +2,5 @@ testCookies.json
 testLocalStorage.json
 testSettings.json
 testKeywords.json
+testHistory.json
 node_modules
