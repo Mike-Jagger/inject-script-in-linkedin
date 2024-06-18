@@ -321,7 +321,7 @@ async function performAutomationTask(browserIndex, quadrant) {
     await page.setRequestInterception(true);
     page.on('request', (request) => {
         const resourceType = request.resourceType();
-        const blockTypes = ['image', 'stylesheet', 'font', 'media', 'script', 'xhr', 'fetch'];
+        const blockTypes = ['image', 'font'];
         if (blockTypes.includes(resourceType)) {
             request.abort();
         } else {
@@ -375,7 +375,7 @@ async function performAutomationTask(browserIndex, quadrant) {
     await sleep(10000);
 
     try {
-        await page.waitForSelector('button[aria-label*="Show all filters"]', { timeout: 30000});
+        await page.waitForSelector('button[aria-label*="Show all filters"]', { timeout: 5000});
     } catch(e) {
         console.error("There is no 'show all filters button'");
     }
@@ -388,8 +388,8 @@ async function performAutomationTask(browserIndex, quadrant) {
 
     // Close browser after the specified duration
     console.log("\n4. MAKE CODE RUN FOR SPECIFIED HOURS\n");
-    await sleep(settings.amountOfHoursRun * 60 * 60 * 1000);
-    // await sleep(10000); // Will run for 10 seconds only
+    // await sleep(settings.amountOfHoursRun * 60 * 60 * 1000);
+    await sleep(10000); // Will run for 10 seconds only
     console.log(`Program ending after executing for ${settings.amountOfHoursRun} hours`);
     await browser.close();
 }
