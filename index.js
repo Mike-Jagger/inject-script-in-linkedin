@@ -232,6 +232,8 @@ async function performAutomationTask(currentKeyWord) {
 
     const page = await browser.newPage();
 
+    await page.setDefaultTimeout(3600 * 1000)
+
     await page.goto(LOGIN_PAGE, { waitUntil: 'networkidle2' });
 
     await loadCookiesAndLocalStorage(page);
