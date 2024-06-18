@@ -223,7 +223,18 @@ async function executeTestScriptInConsole(page, scriptPath) {
     console.log("Script executed");
 }
 
-async function performAutomationTask(currentKeyWord) {
+async function performAutomationTask() {
+    await updateKeywordsFromFile();
+    await moveToNextKeyword();
+
+    // Load the current keyword
+    const jsonKeywordsPath = path.resolve(__dirname, JSON_KEYWORDS);
+    let currentKeyWord = {};
+    if (fs.existsSync(jsonKeywordsPath)) {
+        const jsonKeywords = JSON.parse(fs.readFileSync(jsonKeywordsPath, 'utf-8'));
+        currentKeyWord = jsonKeywords.currentKeyWord;
+    }
+
     const browser = await puppeteer.launch({ 
         headless: settings.shouldBrowseInHeadless,
         defaultViewport: null, //Defaults to an 800x600 viewport
@@ -330,20 +341,9 @@ async function main() {
     // HEAD TO www.linkedin.com
     console.log("\n2. GOTO LINKEDIN.COM\n");
 
-    await updateKeywordsFromFile();
-    await moveToNextKeyword();
-
-    // Load the current keyword
-    const jsonKeywordsPath = path.resolve(__dirname, JSON_KEYWORDS);
-    let currentKeyWord = {};
-    if (fs.existsSync(jsonKeywordsPath)) {
-        const jsonKeywords = JSON.parse(fs.readFileSync(jsonKeywordsPath, 'utf-8'));
-        currentKeyWord = jsonKeywords.currentKeyWord;
-    }
-
     // Open multiple browser instances concurrently
     await Promise.all(
-        Array.from({ length: settings.numberOfPagesOpened }, () => performAutomationTask(currentKeyWord))
+        Array.from({ length: settings.numberOfPagesOpened }, () => performAutomationTask())
     );
 }
 
