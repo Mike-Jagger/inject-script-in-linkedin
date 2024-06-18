@@ -242,7 +242,7 @@ async function executeTestScriptInConsole(page, scriptPath) {
     console.log("Script executed");
 }
 
-async function performAutomationTask() {
+async function performAutomationTask(browserIndex, quadrant) {
     await acquireLock();
     try {
         await updateKeywordsFromFile();
@@ -262,7 +262,11 @@ async function performAutomationTask() {
     const browser = await puppeteer.launch({ 
         headless: settings.shouldBrowseInHeadless,
         defaultViewport: null, //Defaults to an 800x600 viewport
-        args:['--start-maximized' ]
+        args:[
+            '--start-maximized',
+            `--window-size=${quadrant.width},${quadrant.height}`,
+            `--window-position=${quadrant.x},${quadrant.y}`
+        ]
     });
 
     const page = await browser.newPage();
@@ -365,11 +369,27 @@ async function main() {
     // HEAD TO www.linkedin.com
     console.log("\n2. GOTO LINKEDIN.COM\n");
 
+    // Get screen dimensions
+    const screenWidth = 1920;
+    const screenHeight = 1080;
+    const halfWidth = screenWidth / 2;
+    const halfHeight = screenHeight / 2;
+
+    // Define quadrants
+    const quadrants = [
+        { x: 0, y: 0, width: halfWidth, height: halfHeight },
+        { x: halfWidth, y: 0, width: halfWidth, height: halfHeight },
+        { x: 0, y: halfHeight, width: halfWidth, height: halfHeight },
+        { x: halfWidth, y: halfHeight, width: halfWidth, height: halfHeight }
+    ];
+
     // Open multiple browser instances concurrently
+    let browserIndex = 0;
     while(settings.numberOfTimesProgramShouldRun) {
         await Promise.all(
             Array.from({ length: settings.numberOfPagesOpened }, async () => {
-                await performAutomationTask();
+                await performAutomationTask(browserIndex, quadrants[browserIndex % 4]);
+                browserIndex++;
             })
         );
         settings.numberOfTimesProgramShouldRun--;
