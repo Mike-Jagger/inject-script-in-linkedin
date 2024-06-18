@@ -6,7 +6,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "",
+  "author": "Gerard Ledoux",
   "license": "ISC",
   "dependencies": {
     "node-schedule": "^2.1.1",
