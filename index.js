@@ -259,7 +259,7 @@ async function performAutomationTask(currentKeyWord) {
     }
     await page.type('input[aria-label="Search"]', currentKeyWord.keyword, { delay: 200 });
     await page.keyboard.press('Enter');
-    await sleep(2000);
+    await sleep(5000);
 
     await clickButton(page, ['Posts']);
 
