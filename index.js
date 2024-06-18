@@ -3,6 +3,7 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 const readline = require('readline');
+const schedule = require('node-schedule');
 const { sleep } = require('./sleep');
 const { clickButton } = require('./clickButton');
 
