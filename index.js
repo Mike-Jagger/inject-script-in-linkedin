@@ -14,6 +14,7 @@ const TXT_KEYWORDS = './keywords.txt';
 const JSON_KEYWORDS = './testKeywords.json';
 const TEST_SCRIPT = './test.js';
 const LOGIN_PAGE = 'https://www.linkedin.com/login';
+const LOCK_FILE = './lockfile';
 
 // Load settings from JSON file
 let settings = {
@@ -133,6 +134,21 @@ async function isLoginSuccessful(page) {
     }
 }
 
+// Function to acquire a lock
+async function acquireLock() {
+    while (fs.existsSync(LOCK_FILE)) {
+        await sleep(100);
+    }
+    fs.writeFileSync(LOCK_FILE, 'lock');
+}
+
+// Function to release a lock
+function releaseLock() {
+    if (fs.existsSync(LOCK_FILE)) {
+        fs.unlinkSync(LOCK_FILE);
+    }
+}
+
 // Function to update the JSON_KEYWORDS file based on the TXT_KEYWORDS file
 async function updateKeywordsFromFile() {
     const txtKeywordsPath = path.resolve(__dirname, TXT_KEYWORDS);
@@ -227,6 +243,14 @@ async function executeTestScriptInConsole(page, scriptPath) {
 }
 
 async function performAutomationTask() {
+    await acquireLock();
+    try {
+        await updateKeywordsFromFile();
+        await moveToNextKeyword();
+    } finally {
+        releaseLock();
+    }
+
     // Load the current keyword
     const jsonKeywordsPath = path.resolve(__dirname, JSON_KEYWORDS);
     let currentKeyWord = {};
@@ -347,8 +371,6 @@ async function main() {
     while(settings.numberOfTimesProgramShouldRun) {
         await Promise.all(
             Array.from({ length: settings.numberOfPagesOpened }, async () => {
-                await updateKeywordsFromFile();
-                await moveToNextKeyword();
                 await performAutomationTask();
             })
         );
@@ -363,5 +385,5 @@ const job = schedule.scheduleJob('0 8 * * *', () => {
 
 // Manually run the script immediately if needed for testing
 if (process.argv.includes('--run-now')) {
-    main().catch(console.error);
+        main().catch(console.error);
 }
