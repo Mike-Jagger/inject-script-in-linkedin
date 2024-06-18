@@ -376,10 +376,42 @@ async function main() {
     }
 }
 
-// Schedule the main function to run at 8 am Pacific Time every day
-const job = schedule.scheduleJob('0 8 * * *', () => {
-    main().catch(console.error);
-});
+// Function to check if the current time is 8 AM
+function isTimeToRun() {
+    const now = new Date();
+    return now.getHours() === 8 && now.getMinutes() === 0;
+}
+
+// Function to set an interval to frequently check the time
+function setFrequentCheckInterval() {
+    const interval = setInterval(() => {
+        if (isTimeToRun()) {
+            clearInterval(interval); // Clear the interval
+            runMain(); // Run the main function
+            setDailySchedule(); // Set the daily schedule
+        }
+    }, 60000); // Check every minute
+}
+
+// Function to set the daily schedule at 8 AM
+function setDailySchedule() {
+    schedule.scheduleJob('0 8 * * *', () => {
+        runMain();
+    });
+}
+
+// Wrapper to run the main function
+async function runMain() {
+    await main().catch(console.error);
+}
+
+// Initial check at startup
+if (isTimeToRun()) {
+    runMain(); // Run the main function immediately
+    setDailySchedule(); // Set the daily schedule
+} else {
+    setFrequentCheckInterval(); // Set frequent check interval
+}
 
 // Manually run the script immediately if needed for testing
 if (process.argv.includes('--run-now')) {
