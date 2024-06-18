@@ -227,9 +227,6 @@ async function executeTestScriptInConsole(page, scriptPath) {
 }
 
 async function performAutomationTask() {
-    await updateKeywordsFromFile();
-    await moveToNextKeyword();
-
     // Load the current keyword
     const jsonKeywordsPath = path.resolve(__dirname, JSON_KEYWORDS);
     let currentKeyWord = {};
@@ -237,6 +234,8 @@ async function performAutomationTask() {
         const jsonKeywords = JSON.parse(fs.readFileSync(jsonKeywordsPath, 'utf-8'));
         currentKeyWord = jsonKeywords.currentKeyWord;
     }
+
+    console.log(currentKeyWord);
 
     const browser = await puppeteer.launch({ 
         headless: settings.shouldBrowseInHeadless,
@@ -273,7 +272,7 @@ async function performAutomationTask() {
     }
     await page.type('input[aria-label="Search"]', currentKeyWord.keyword, { delay: 200 });
     await page.keyboard.press('Enter');
-    await sleep(5000);
+    await sleep(10000);
 
     await clickButton(page, ['Posts']);
 
@@ -347,7 +346,11 @@ async function main() {
     // Open multiple browser instances concurrently
     while(settings.numberOfTimesProgramShouldRun) {
         await Promise.all(
-            Array.from({ length: settings.numberOfPagesOpened }, () => performAutomationTask())
+            Array.from({ length: settings.numberOfPagesOpened }, async () => {
+                await updateKeywordsFromFile();
+                await moveToNextKeyword();
+                await performAutomationTask();
+            })
         );
         settings.numberOfTimesProgramShouldRun--;
     }
