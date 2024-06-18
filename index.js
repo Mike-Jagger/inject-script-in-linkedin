@@ -259,8 +259,6 @@ async function performAutomationTask() {
         currentKeyWord = jsonKeywords.currentKeyWord;
     }
 
-    console.log(currentKeyWord);
-
     const browser = await puppeteer.launch({ 
         headless: settings.shouldBrowseInHeadless,
         defaultViewport: null, //Defaults to an 800x600 viewport
@@ -385,5 +383,8 @@ const job = schedule.scheduleJob('0 8 * * *', () => {
 
 // Manually run the script immediately if needed for testing
 if (process.argv.includes('--run-now')) {
-        main().catch(console.error);
+    (async () => {
+        await main().catch(console.error);
+        process.exit(0);
+    })();
 }
