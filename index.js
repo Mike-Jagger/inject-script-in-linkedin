@@ -13,6 +13,7 @@ const LOCAL_STORAGE_PATH = './auth/localStorage.json';
 const TXT_KEYWORDS = './keywords.txt';
 const JSON_KEYWORDS = './keywords.json';
 const TEST_SCRIPT = './test.js';
+const historyPath = './history.json';
 const LOGIN_PAGE = 'https://www.linkedin.com/login';
 const LOCK_FILE = './lockfile';
 
@@ -30,6 +31,19 @@ function loadSettings() {
         settings = settingsData.Settings;
         if (settings.numberOfTimesProgramShouldRun === -1) settings.numberOfTimesProgramShouldRun = Infinity;
     }
+}
+
+async function recordHistory(keyword) {
+    const currentTime = new Date().toLocaleString();
+    let history = { history: [] };
+
+    if (fs.existsSync(historyPath)) {
+        history = JSON.parse(fs.readFileSync(historyPath, 'utf-8'));
+    }
+
+    history.history.push({ time: currentTime, keyword: keyword });
+
+    fs.writeFileSync(historyPath, JSON.stringify(history, null, 2));
 }
 
 async function setupSettings() {
@@ -258,6 +272,9 @@ async function performAutomationTask(browserIndex, quadrant) {
         const jsonKeywords = JSON.parse(fs.readFileSync(jsonKeywordsPath, 'utf-8'));
         currentKeyWord = jsonKeywords.currentKeyWord;
     }
+
+    // Record the history of the run
+    await recordHistory(currentKeyWord.keyword);
 
     const browser = await puppeteer.launch({ 
         headless: settings.shouldBrowseInHeadless,
