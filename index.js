@@ -300,16 +300,22 @@ async function performAutomationTask(browserIndex, quadrant) {
     await page.keyboard.press('Enter');
     await sleep(10000);
 
+    try {
+        await page.waitForSelector('button[aria-label*="Show all filters"]', { timeout: 30000});
+    } catch(e) {
+        console.error("There is no show all filters button");
+    }
+
     await clickButton(page, ['Posts']);
 
     // OPEN AND CLEAR CONSOLE
     console.log("\n3. OPEN AND CLEAR CONSOLE\n");
-    await executeTestScriptInConsole(page, TEST_SCRIPT);
+    // await executeTestScriptInConsole(page, TEST_SCRIPT);
 
     // Close browser after the specified duration
     console.log("\n4. MAKE CODE RUN FOR SPECIFIED HOURS\n");
     // await sleep(settings.amountOfHoursRun * 60 * 60 * 1000);
-    await sleep(10000);
+    await sleep(1000000);
     console.log(`Program ending after executing for ${settings.amountOfHoursRun} hours`);
     await browser.close();
 }
