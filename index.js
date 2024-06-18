@@ -370,15 +370,28 @@ async function main() {
     console.log("\n2. GOTO LINKEDIN.COM\n");
 
     // Get screen dimensions dynamically
-    const screenInfo = await puppeteer.launch({ headless: settings.shouldBrowseInHeadless });
+    const screenInfo = await puppeteer.launch({ 
+        headless: settings.shouldBrowseInHeadless,
+        defaultViewport: null,
+        args: ['--start-maximized']
+    });
     const screenPage = await screenInfo.newPage();
-    const viewport = screenPage.viewport();
-    const screenWidth = viewport.width;
-    const screenHeight = viewport.height;
+
+    // Evaluate the window dimensions within the page context
+    const { screenWidth, screenHeight } = await screenPage.evaluate(() => {
+        return {
+            screenWidth: window.screen.width,
+            screenHeight: window.screen.height
+        };
+    });
+
+    console.log('Screen Width:', screenWidth, 'Screen Height:', screenHeight);
     await screenInfo.close();
 
     const halfWidth = screenWidth / 2;
     const halfHeight = screenHeight / 2;
+
+    console.log('Half Width:', halfWidth, 'Half Height:', halfHeight);
 
     // Define quadrants
     const quadrants = [
