@@ -7,13 +7,13 @@ const schedule = require('node-schedule');
 const { sleep } = require('./sleep');
 const { clickButton } = require('./clickButton');
 
-const COOKIES_PATH = './auth/cookies.json';
-const SETTINGS_PATH = './settings.json';
-const LOCAL_STORAGE_PATH = './auth/localStorage.json';
+const COOKIES_PATH = './auth/testCookies.json';
+const SETTINGS_PATH = './testSettings.json';
+const LOCAL_STORAGE_PATH = './auth/testLocalStorage.json';
 const TXT_KEYWORDS = './keywords.txt';
-const JSON_KEYWORDS = './keywords.json';
+const JSON_KEYWORDS = './testKeywords.json';
 const TEST_SCRIPT = './test.js';
-const historyPath = './history.json';
+const historyPath = './testHistory.json';
 const LOGIN_PAGE = 'https://www.linkedin.com/login';
 const LOCK_FILE = './lockfile';
 
@@ -283,13 +283,69 @@ async function performAutomationTask(browserIndex, quadrant) {
             '--start-maximized',
             `--window-size=${quadrant.width},${quadrant.height}`,
             `--window-position=${quadrant.x},${quadrant.y}`,
+            '--disable-gpu',
+            '--disable-dev-shm-usage',
+            '--disable-setuid-sandbox',
+            '--no-sandbox',
+            '--disable-extensions',
+            '--disable-background-networking',
+            '--disable-sync',
+            '--disable-translate',
+            '--disable-background-timer-throttling',
+            '--disable-backgrounding-occluded-windows',
+            '--disable-renderer-backgrounding',
+            '--disable-notifications',
+            '--disable-default-apps',
+            '--disable-hang-monitor',
+            '--disable-prompt-on-repost',
+            '--disable-client-side-phishing-detection',
+            '--disable-popup-blocking',
+            '--disable-background-timer-throttling',
+            '--disable-breakpad',
+            '--disable-component-update',
+            '--disable-domain-reliability',
+            '--disable-features=AudioServiceOutOfProcess',
+            '--disable-print-preview',
+            '--disable-software-rasterizer',
+            '--disable-web-security',
+            '--disable-site-isolation-trials',
             '--disable-gpu'
         ]
     });
 
     const page = await browser.newPage();
 
-    await page.setDefaultTimeout(3600 * 1000)
+    await page.setDefaultTimeout(3600 * 1000);
+
+    // Block unnecessary resources
+    await page.setRequestInterception(true);
+    page.on('request', (request) => {
+        const resourceType = request.resourceType();
+        const blockTypes = ['image', 'stylesheet', 'font', 'media', 'script', 'xhr', 'fetch'];
+        if (blockTypes.includes(resourceType)) {
+            request.abort();
+        } else {
+            request.continue();
+        }
+    });
+
+    // Disable animations and JavaScript timers
+    await page.evaluateOnNewDocument(() => {
+        const style = document.createElement('style');
+        style.innerHTML = `
+            *, *::before, *::after {
+                animation: none !important;
+                transition: none !important;
+            }
+        `;
+        document.head.appendChild(style);
+
+        // Disable JavaScript timers
+        const _setTimeout = window.setTimeout;
+        window.setTimeout = (fn, delay, ...args) => {
+            return _setTimeout(fn, Math.min(delay, 1000), ...args);
+        };
+    });
 
     await page.goto(LOGIN_PAGE, { waitUntil: 'networkidle2' });
 
