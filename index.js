@@ -282,7 +282,8 @@ async function performAutomationTask(browserIndex, quadrant) {
         args:[
             '--start-maximized',
             `--window-size=${quadrant.width},${quadrant.height}`,
-            `--window-position=${quadrant.x},${quadrant.y}`
+            `--window-position=${quadrant.x},${quadrant.y}`,
+            '--disable-gpu'
         ]
     });
 
