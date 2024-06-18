@@ -19,8 +19,8 @@ const LOCK_FILE = './lockfile';
 // Load settings from JSON file
 let settings = {
     shouldBrowseInHeadless: false,
-    numberOfPagesOpened: 1,
-    amountOfHoursRun: 2,
+    numberOfPagesOpened: 4,
+    amountOfHoursRun: 4,
     numberOfTimesProgramShouldRun: -1
 };
 
@@ -47,8 +47,8 @@ async function setupSettings() {
     console.log('BUT you can change them in the settings.json file\n');
     await sleep(3000)
     settings.shouldBrowseInHeadless = (await askQuestion('Do you want to browse in headless mode? (Y/N): ')).toLowerCase() === 'y';
-    settings.numberOfPagesOpened = parseInt(await askQuestion('How many browser windows do you want to open? (default: 1): ')) || 1;
-    settings.amountOfHoursRun = parseInt(await askQuestion('How many hours should the program run? (default: 2): ')) || 2;
+    settings.numberOfPagesOpened = parseInt(await askQuestion('How many browser windows do you want to open? (default: 4): ')) || 4;
+    settings.amountOfHoursRun = parseInt(await askQuestion('How many hours should the program run? (default: 4): ')) || 4;
     settings.numberOfTimesProgramShouldRun = parseInt(await askQuestion('How many times do you want the program to run for? (default: -1 [to run until forced stop])')) || -1;
 
     rl.close();
@@ -315,7 +315,7 @@ async function performAutomationTask(browserIndex, quadrant) {
     // Close browser after the specified duration
     console.log("\n4. MAKE CODE RUN FOR SPECIFIED HOURS\n");
     await sleep(settings.amountOfHoursRun * 60 * 60 * 1000);
-    // await sleep(10000);
+    // await sleep(10000); // Will run for 10 seconds only
     console.log(`Program ending after executing for ${settings.amountOfHoursRun} hours`);
     await browser.close();
 }
