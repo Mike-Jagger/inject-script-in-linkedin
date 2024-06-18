@@ -369,9 +369,14 @@ async function main() {
     // HEAD TO www.linkedin.com
     console.log("\n2. GOTO LINKEDIN.COM\n");
 
-    // Get screen dimensions
-    const screenWidth = 1920;
-    const screenHeight = 1080;
+    // Get screen dimensions dynamically
+    const screenInfo = await puppeteer.launch({ headless: settings.shouldBrowseInHeadless });
+    const screenPage = await screenInfo.newPage();
+    const viewport = screenPage.viewport();
+    const screenWidth = viewport.width;
+    const screenHeight = viewport.height;
+    await screenInfo.close();
+
     const halfWidth = screenWidth / 2;
     const halfHeight = screenHeight / 2;
 
