@@ -242,7 +242,7 @@ async function executeTestScriptInConsole(page, scriptPath) {
     console.log("Script executed");
 }
 
-async function performAutomationTask(browserIndex, quadrant) {
+async function performAutomationTask(quadrant) {
     await acquireLock();
     try {
         await updateKeywordsFromFile();
@@ -388,7 +388,7 @@ async function main() {
     while(settings.numberOfTimesProgramShouldRun) {
         await Promise.all(
             Array.from({ length: settings.numberOfPagesOpened }, async () => {
-                await performAutomationTask(browserIndex, quadrants[browserIndex % 4]);
+                await performAutomationTask(quadrants[browserIndex % 4]);
                 browserIndex++;
             })
         );
