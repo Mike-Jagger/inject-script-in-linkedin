@@ -1,0 +1,34 @@
+I - Prerequisites:
+Ensure that you have nodejs and npm installed on your system. (Check their official website for instructions on installation)
+
+II - Project Files:
+Ensure that your project files adhere to the following:
+	- Delete the settings.js and history.json files if any
+	- Clear the contents of localStorage.json and cookies.json files
+	- Make sure the keywords.json file has the following content:
+		{
+  			"currentKeyWord": {},
+  			"keyWords": []
+		}
+
+III - Installing packages:
+Install the required packages by running the following commands:
+- npm install
+- npm install -g pm2
+
+IV - Running the program:
+There are two ways to run the program:
+
+1. Test Mode
+To run the program in test mode, run the following command:
+	- node index.js --run-now
+
+V - Issues
+
+1. "FATAL ERROR: Zone Allocation failed - process out of memory...": 
+You might come across this issue during the time of the program. Run the following command instead;
+
+- node --max-old-space-size=4096 index.js --run-now
+
+This ensures the program has enough heap space
+
