@@ -7,11 +7,11 @@ const schedule = require('node-schedule');
 const { sleep } = require('./sleep');
 const { clickButton } = require('./clickButton');
 
-const COOKIES_PATH = './auth/testCookies.json';
-const SETTINGS_PATH = './testSettings.json';
-const LOCAL_STORAGE_PATH = './auth/testLocalStorage.json';
+const COOKIES_PATH = './auth/cookies.json';
+const SETTINGS_PATH = './settings.json';
+const LOCAL_STORAGE_PATH = './auth/localStorage.json';
 const TXT_KEYWORDS = './keywords.txt';
-const JSON_KEYWORDS = './testKeywords.json';
+const JSON_KEYWORDS = './keywords.json';
 const TEST_SCRIPT = './test.js';
 const LOGIN_PAGE = 'https://www.linkedin.com/login';
 const LOCK_FILE = './lockfile';
@@ -303,19 +303,19 @@ async function performAutomationTask(browserIndex, quadrant) {
     try {
         await page.waitForSelector('button[aria-label*="Show all filters"]', { timeout: 30000});
     } catch(e) {
-        console.error("There is no show all filters button");
+        console.error("There is no 'show all filters button'");
     }
 
     await clickButton(page, ['Posts']);
 
     // OPEN AND CLEAR CONSOLE
     console.log("\n3. OPEN AND CLEAR CONSOLE\n");
-    // await executeTestScriptInConsole(page, TEST_SCRIPT);
+    await executeTestScriptInConsole(page, TEST_SCRIPT);
 
     // Close browser after the specified duration
     console.log("\n4. MAKE CODE RUN FOR SPECIFIED HOURS\n");
-    // await sleep(settings.amountOfHoursRun * 60 * 60 * 1000);
-    await sleep(1000000);
+    await sleep(settings.amountOfHoursRun * 60 * 60 * 1000);
+    // await sleep(10000);
     console.log(`Program ending after executing for ${settings.amountOfHoursRun} hours`);
     await browser.close();
 }
