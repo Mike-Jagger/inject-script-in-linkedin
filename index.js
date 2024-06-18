@@ -345,9 +345,12 @@ async function main() {
     console.log("\n2. GOTO LINKEDIN.COM\n");
 
     // Open multiple browser instances concurrently
-    await Promise.all(
-        Array.from({ length: settings.numberOfPagesOpened }, () => performAutomationTask())
-    );
+    while(settings.numberOfTimesProgramShouldRun) {
+        await Promise.all(
+            Array.from({ length: settings.numberOfPagesOpened }, () => performAutomationTask())
+        );
+        settings.numberOfTimesProgramShouldRun--;
+    }
 }
 
 // Schedule the main function to run at 8 am Pacific Time every day
