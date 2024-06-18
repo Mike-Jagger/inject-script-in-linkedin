@@ -394,12 +394,28 @@ async function main() {
     console.log('Half Width:', halfWidth, 'Half Height:', halfHeight);
 
     // Define quadrants
-    const quadrants = [
-        { x: 0, y: 0, width: halfWidth, height: halfHeight },
-        { x: halfWidth, y: 0, width: halfWidth, height: halfHeight },
-        { x: 0, y: halfHeight, width: halfWidth, height: halfHeight },
-        { x: halfWidth, y: halfHeight, width: halfWidth, height: halfHeight }
-    ];
+    let quadrants;
+
+    switch (settings.numberOfPagesOpened) {
+        case 1:
+            quadrants = [
+                { x: 0, y: 0, width: screenWidth, height: screenHeight },
+            ];
+            break;
+        case 2:
+            quadrants = [
+                { x: 0, y: 0, width: halfWidth, height: screenHeight },
+                { x: halfWidth, y: 0, width: halfWidth, height: screenHeight }
+            ];
+            break;
+        default:
+            quadrants = [
+                { x: 0, y: 0, width: halfWidth, height: halfHeight },
+                { x: halfWidth, y: 0, width: halfWidth, height: halfHeight },
+                { x: 0, y: halfHeight, width: halfWidth, height: halfHeight },
+                { x: halfWidth, y: halfHeight, width: halfWidth, height: halfHeight }
+            ];
+    }
 
     // Open multiple browser instances concurrently
     let browserIndex = 0;
