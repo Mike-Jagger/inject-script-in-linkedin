@@ -304,7 +304,7 @@ async function performAutomationTask(browserIndex, quadrant) {
                     console.error("No message overlay box found");
                 }
                 await sleep(2000);
-                
+
                 await page.evaluate(() => {
                     const msgOverlay = document.getElementById('msg-overlay');
                     console.log(msgOverlay);
@@ -466,6 +466,7 @@ async function main() {
                 await performAutomationTask(index, currentQuadrant);
             })
         );
+        resourceManagers.splice(0, resourceManagers.length);
         settings.numberOfTimesProgramShouldRun--;
     }
 }
