@@ -466,7 +466,11 @@ async function main() {
                 await performAutomationTask(index, currentQuadrant);
             })
         );
+
+        // Kill browser processes if not taken care of
+        await resourceManagers.forEach(browser => { browser.release() });
         resourceManagers.splice(0, resourceManagers.length);
+
         settings.numberOfTimesProgramShouldRun--;
     }
 }
