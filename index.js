@@ -468,7 +468,7 @@ async function main() {
         );
 
         // Kill browser processes if not taken care of
-        await resourceManagers.forEach(browser => { browser.release() });
+        resourceManagers.forEach(async (browser) => { await browser.release() });
         resourceManagers.splice(0, resourceManagers.length);
 
         settings.numberOfTimesProgramShouldRun--;
