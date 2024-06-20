@@ -295,13 +295,16 @@ async function performAutomationTask(browserIndex, quadrant) {
         let isPageError = true;
 
         while(isPageError) {
-
             try {
                 await page.goto('https://www.linkedin.com/');
 
-                // Set the display of the element with id msg-overlay to none
-                await page.waitForSelector('aside[id="msg-overlay"]', { timeout: 60000 });
+                try {
+                    await page.waitForSelector('aside[id="msg-overlay"]', { timeout: 60000 });
+                } catch (e) {
+                    console.error("No message overlay box found");
+                }
                 await sleep(2000);
+                
                 await page.evaluate(() => {
                     const msgOverlay = document.getElementById('msg-overlay');
                     console.log(msgOverlay);
@@ -332,7 +335,7 @@ async function performAutomationTask(browserIndex, quadrant) {
                 console.log("\n3. OPEN AND CLEAR CONSOLE\n");
                 await executeTestScriptInConsole(page, TEST_SCRIPT);
 
-                isPageError = false
+                isPageError = false;
             } catch (e) {
                 console.log("Error while loading page:", e);
                 isPageError = true;
@@ -341,8 +344,10 @@ async function performAutomationTask(browserIndex, quadrant) {
 
         // Close browser after the specified duration
         console.log("\n4. MAKE CODE RUN FOR SPECIFIED HOURS\n");
+
         // await sleep(settings.amountOfHoursRun * 60 * 60 * 1000);
         await sleep(10000); // Will run for 10 seconds only
+
         console.log(`Program ending after executing for ${settings.amountOfHoursRun} hours`);
         await resourceManager.release();
     } else {
