@@ -282,56 +282,61 @@ async function performAutomationTask(browserIndex, quadrant) {
 
     // Initialize ResourceManager if not already initialized
     if (!resourceManagers[browserIndex]) {
-        resourceManagers[browserIndex] = new ResourceManager(false);
+        resourceManagers[browserIndex] = await new ResourceManager(settings, quadrant);
         await resourceManagers[browserIndex].init();
-    }
 
-    const resourceManager = resourceManagers[browserIndex];
-    const page = await resourceManager.createPage();
+        const resourceManager = resourceManagers[browserIndex];
+        const page = await resourceManager.createPage();
 
-    await loadCookiesAndLocalStorage(page);
+        await page.goto(LOGIN_PAGE);
 
-    await page.goto('https://www.linkedin.com/');
+        await loadCookiesAndLocalStorage(page);
 
-    // Set the display of the element with id msg-overlay to none
-    await page.waitForSelector('aside[id="msg-overlay"]', { timeout: 60000 });
-    await sleep(2000);
-    await page.evaluate(() => {
-        const msgOverlay = document.getElementById('msg-overlay');
-        console.log(msgOverlay);
-        if (msgOverlay) {
-            msgOverlay.style.display = 'none';
+        await page.goto('https://www.linkedin.com/');
+
+        // Set the display of the element with id msg-overlay to none
+        await page.waitForSelector('aside[id="msg-overlay"]', { timeout: 60000 });
+        await sleep(2000);
+        await page.evaluate(() => {
+            const msgOverlay = document.getElementById('msg-overlay');
+            console.log(msgOverlay);
+            if (msgOverlay) {
+                msgOverlay.style.display = 'none';
+            }
+        });
+
+        await page.waitForSelector('button[aria-label="Click to start a search"]', { timeout: 5000 });
+        try {
+            await page.click('button[aria-label="Click to start a search"]');
+        } catch(e) {
+            console.error("No search button found");
         }
-    });
+        await page.type('input[aria-label="Search"]', currentKeyWord.keyword, { delay: 200 });
+        await page.keyboard.press('Enter');
+        await sleep(10000);
 
-    await page.waitForSelector('button[aria-label="Click to start a search"]', { timeout: 5000 });
-    try {
-        await page.click('button[aria-label="Click to start a search"]');
-    } catch(e) {
-        console.error("No search button found");
+        try {
+            await page.waitForSelector('button[aria-label*="Show all filters"]', { timeout: 5000});
+        } catch(e) {
+            console.error("There is no 'show all filters button'");
+        }
+
+        await clickButton(page, ['Posts']);
+
+        // OPEN AND CLEAR CONSOLE
+        console.log("\n3. OPEN AND CLEAR CONSOLE\n");
+        await executeTestScriptInConsole(page, TEST_SCRIPT);
+
+        // Close browser after the specified duration
+        console.log("\n4. MAKE CODE RUN FOR SPECIFIED HOURS\n");
+        // await sleep(settings.amountOfHoursRun * 60 * 60 * 1000);
+        await sleep(10000); // Will run for 10 seconds only
+        console.log(`Program ending after executing for ${settings.amountOfHoursRun} hours`);
+        await resourceManager.release();
+    } else {
+        console.log(`Browser already take at index ${browserIndex}`);
+        console.log(browserIndex, resourceManagers);
     }
-    await page.type('input[aria-label="Search"]', currentKeyWord.keyword, { delay: 200 });
-    await page.keyboard.press('Enter');
-    await sleep(10000);
-
-    try {
-        await page.waitForSelector('button[aria-label*="Show all filters"]', { timeout: 5000});
-    } catch(e) {
-        console.error("There is no 'show all filters button'");
-    }
-
-    await clickButton(page, ['Posts']);
-
-    // OPEN AND CLEAR CONSOLE
-    console.log("\n3. OPEN AND CLEAR CONSOLE\n");
-    await executeTestScriptInConsole(page, TEST_SCRIPT);
-
-    // Close browser after the specified duration
-    console.log("\n4. MAKE CODE RUN FOR SPECIFIED HOURS\n");
-    // await sleep(settings.amountOfHoursRun * 60 * 60 * 1000);
-    await sleep(10000); // Will run for 10 seconds only
-    console.log(`Program ending after executing for ${settings.amountOfHoursRun} hours`);
-    await resourceManager.release();
 }
 
 async function main() {
@@ -442,6 +447,7 @@ async function main() {
     while(settings.numberOfTimesProgramShouldRun) {
         await Promise.all(
             Array.from({ length: settings.numberOfPagesOpened }, async (_, index) => {
+                console.log("Browser index: ", index, browserIndex);
                 const currentQuadrant = quadrants[(browserIndex + index) % quadrants.length];
                 await performAutomationTask(browserIndex, currentQuadrant);
                 browserIndex++;
