@@ -21,7 +21,7 @@ class ResourceManager {
     async release() {
         this.isReleased = true;
         if (this.browser) await this.browser.close();
-        if (this.browser.process() != null) this.browser.process().kill('SIGINT');
+        if (this.browser?.process() != null) this.browser.process().kill('SIGINT');
     }
 
     async createPage(url) {
