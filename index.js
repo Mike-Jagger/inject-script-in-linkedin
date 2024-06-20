@@ -6,6 +6,7 @@ const readline = require('readline');
 const schedule = require('node-schedule');
 const { sleep } = require('./sleep');
 const { clickButton } = require('./clickButton');
+const { ResourceManager } = require('./ResourceManager');
 
 const COOKIES_PATH = './auth/testCookies.json';
 const SETTINGS_PATH = './testSettings.json';
@@ -256,6 +257,9 @@ async function executeTestScriptInConsole(page, scriptPath) {
     console.log("Script executed");
 }
 
+// Define your ResourceManager instances
+let resourceManagers = [];
+
 async function performAutomationTask(browserIndex, quadrant) {
     await acquireLock();
     try {
@@ -276,78 +280,14 @@ async function performAutomationTask(browserIndex, quadrant) {
     // Record the history of the run
     await recordHistory(currentKeyWord.keyword);
 
-    const browser = await puppeteer.launch({ 
-        headless: settings.shouldBrowseInHeadless,
-        defaultViewport: null, //Defaults to an 800x600 viewport
-        args:[
-            '--start-maximized',
-            `--window-size=${quadrant.width},${quadrant.height}`,
-            `--window-position=${quadrant.x},${quadrant.y}`,
-            '--disable-gpu',
-            '--disable-dev-shm-usage',
-            '--disable-setuid-sandbox',
-            '--no-sandbox',
-            '--disable-extensions',
-            '--disable-background-networking',
-            '--disable-sync',
-            '--disable-translate',
-            '--disable-background-timer-throttling',
-            '--disable-backgrounding-occluded-windows',
-            '--disable-renderer-backgrounding',
-            '--disable-notifications',
-            '--disable-default-apps',
-            '--disable-hang-monitor',
-            '--disable-prompt-on-repost',
-            '--disable-client-side-phishing-detection',
-            '--disable-popup-blocking',
-            '--disable-background-timer-throttling',
-            '--disable-breakpad',
-            '--disable-component-update',
-            '--disable-domain-reliability',
-            '--disable-features=AudioServiceOutOfProcess',
-            '--disable-print-preview',
-            '--disable-software-rasterizer',
-            '--disable-web-security',
-            '--disable-site-isolation-trials',
-            '--disable-gpu'
-        ]
-    });
+    // Initialize ResourceManager if not already initialized
+    if (!resourceManagers[browserIndex]) {
+        resourceManagers[browserIndex] = new ResourceManager(false);
+        await resourceManagers[browserIndex].init();
+    }
 
-    const page = await browser.newPage();
-
-    await page.setDefaultTimeout(3600 * 1000);
-
-    // Block unnecessary resources
-    await page.setRequestInterception(true);
-    page.on('request', (request) => {
-        const resourceType = request.resourceType();
-        const blockTypes = ['image', 'font'];
-        if (blockTypes.includes(resourceType)) {
-            request.abort();
-        } else {
-            request.continue();
-        }
-    });
-
-    // Disable animations and JavaScript timers
-    await page.evaluateOnNewDocument(() => {
-        const style = document.createElement('style');
-        style.innerHTML = `
-            *, *::before, *::after {
-                animation: none !important;
-                transition: none !important;
-            }
-        `;
-        document.head.appendChild(style);
-
-        // Disable JavaScript timers
-        const _setTimeout = window.setTimeout;
-        window.setTimeout = (fn, delay, ...args) => {
-            return _setTimeout(fn, Math.min(delay, 1000), ...args);
-        };
-    });
-
-    await page.goto(LOGIN_PAGE, { waitUntil: 'networkidle2' });
+    const resourceManager = resourceManagers[browserIndex];
+    const page = await resourceManager.createPage();
 
     await loadCookiesAndLocalStorage(page);
 
@@ -391,7 +331,7 @@ async function performAutomationTask(browserIndex, quadrant) {
     // await sleep(settings.amountOfHoursRun * 60 * 60 * 1000);
     await sleep(10000); // Will run for 10 seconds only
     console.log(`Program ending after executing for ${settings.amountOfHoursRun} hours`);
-    await browser.close();
+    await resourceManager.release();
 }
 
 async function main() {

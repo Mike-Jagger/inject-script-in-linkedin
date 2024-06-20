@@ -3,14 +3,13 @@ const StealthPlugin = require('puppeteer-extra-plugin-stealth');
 const randomUseragent = require('random-useragent');
 puppeteer.use(StealthPlugin());
 
-const USER_AGENT = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3683.75 Safari/537.36';
-
 class ResourceManager {
-    constructor(loadImages = false) {
+    constructor(settings, quadrant) {
         this.browser = null;
+        this.settings = settings;
+        this.quadrant = quadrant;
         this.retries = 0;
         this.isReleased = false;
-        this.loadImages = loadImages;
     }
 
     async init() {
@@ -31,8 +30,12 @@ class ResourceManager {
 
     async runBrowser() {
         const bw = await puppeteer.launch({
-            headless: settings.shouldBrowseInHeadless,
+            headless: this.settings.shouldBrowseInHeadless,
+            defaultViewport: null, //Defaults to an 800x600 viewport
             args: [
+                '--start-maximized',
+                `--window-size=${this.quadrant.width},${this.quadrant.height}`,
+                `--window-position=${this.quadrant.x},${this.quadrant.y}`,
                 '--disable-gpu', '--no-sandbox', '--disable-setuid-sandbox', '--disable-accelerated-2d-canvas', '--disable-dev-shm-usage',
                 '--disable-extensions', '--disable-background-networking', '--disable-sync', '--disable-translate', '--disable-background-timer-throttling',
                 '--disable-backgrounding-occluded-windows', '--disable-renderer-backgrounding', '--disable-notifications', '--disable-default-apps',
@@ -57,31 +60,46 @@ class ResourceManager {
         return bw;
     }
 
-    async createPageInBrowser(url) {
+    async createPageInBrowser() {
         const userAgent = randomUseragent.getRandom();
         const UA = userAgent || USER_AGENT;
         const page = await this.browser.newPage();
-        await page.setViewport({
-            width: 1920 + Math.floor(Math.random() * 100),
-            height: 1080 + Math.floor(Math.random() * 100),
-            deviceScaleFactor: 1,
-            hasTouch: false,
-            isLandscape: false,
-            isMobile: false
-        });
         await page.setUserAgent(UA);
         await page.setJavaScriptEnabled(true);
         await page.setDefaultNavigationTimeout(0);
-        if (!this.loadImages) {
-            await page.setRequestInterception(true);
-            page.on('request', (req) => {
-                if (req.resourceType() == 'stylesheet' || req.resourceType() == 'font' || req.resourceType() == 'image') {
-                    req.abort();
-                } else {
-                    req.continue();
+
+        await page.setDefaultTimeout(3600 * 1000);
+
+        // Block unnecessary resources
+        await page.setRequestInterception(true);
+        page.on('request', (request) => {
+            const resourceType = request.resourceType();
+            const blockTypes = ['image', 'font'];
+            if (blockTypes.includes(resourceType)) {
+                request.abort();
+            } else {
+                request.continue();
+            }
+        });
+
+        // Disable animations and JavaScript timers
+        await page.evaluateOnNewDocument(() => {
+            const style = document.createElement('style');
+            style.innerHTML = `
+                *, *::before, *::after {
+                    animation: none !important;
+                    transition: none !important;
                 }
-            });
-        }
+            `;
+            document.head.appendChild(style);
+
+            // Disable JavaScript timers
+            const _setTimeout = window.setTimeout;
+            window.setTimeout = (fn, delay, ...args) => {
+                return _setTimeout(fn, Math.min(delay, 1000), ...args);
+            };
+        });
+
         return page;
     }
 }
