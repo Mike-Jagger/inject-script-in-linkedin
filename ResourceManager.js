@@ -1,6 +1,6 @@
 const puppeteer = require('puppeteer-extra');
 const StealthPlugin = require('puppeteer-extra-plugin-stealth');
-const randomUseragent = require('random-useragent');
+// const randomUseragent = require('random-useragent');
 puppeteer.use(StealthPlugin());
 
 class ResourceManager {
@@ -62,10 +62,10 @@ class ResourceManager {
     }
 
     async createPageInBrowser() {
-        const userAgent = randomUseragent.getRandom();
-        const UA = userAgent || USER_AGENT;
+        // const userAgent = randomUseragent.getRandom();
+        // const UA = userAgent || USER_AGENT;
         const page = await this.browser.newPage();
-        await page.setUserAgent(UA);
+        // await page.setUserAgent(UA);
         await page.setJavaScriptEnabled(true);
         await page.setDefaultNavigationTimeout(0);
 
