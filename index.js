@@ -338,6 +338,8 @@ async function performAutomationTask(browserIndex, quadrant) {
                 isPageError = false;
             } catch (e) {
                 console.log("Error while loading page:", e);
+                await page.goto(LOGIN_PAGE);
+                sleep(2000);
                 isPageError = true;
             }
         }
