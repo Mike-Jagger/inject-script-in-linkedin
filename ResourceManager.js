@@ -1,6 +1,7 @@
 const puppeteer = require('puppeteer-extra');
 const StealthPlugin = require('puppeteer-extra-plugin-stealth');
 // const randomUseragent = require('random-useragent');
+const { task } = require('./task');
 puppeteer.use(StealthPlugin());
 
 class ResourceManager {
@@ -18,6 +19,7 @@ class ResourceManager {
         this.isReleased = false;
         this.retries = 0;
         this.browser = await this.runBrowser();
+        this.page = await this.createPage();
     }
 
     async release() {
@@ -52,9 +54,8 @@ class ResourceManager {
             if (this.isReleased) return;
             console.log("BROWSER CRASH");
             if (this.retries <= 3) {
-                // console.log("test");
                 this.retries += 1;
-                if (this.browser && this.browser.process() != null) this.browser.process().kill('SIGTERM');
+                if (this.browser && this.browser.process() != null) this.browser.process().kill('SIGTINT');
                 await this.init();
             } else {
                 throw "BROWSER crashed more than 3 times";
