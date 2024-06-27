@@ -335,6 +335,29 @@ async function performAutomationTask(browserIndex, quadrant) {
                 console.log("\n3. OPEN AND CLEAR CONSOLE\n");
                 await executeTestScriptInConsole(page, TEST_SCRIPT);
 
+                // Monitor scrolling activity
+                let lastScrollTime = Date.now();
+
+                // Function to monitor the scrolling activity
+                const monitorScroll = async () => {
+                    while (true) {
+                        const newScrollPosition = await page.evaluate(() => window.scrollY);
+                        if (newScrollPosition > 0) {
+                            lastScrollTime = Date.now();
+                        }
+                        await sleep(10000); // Check every 10 seconds
+                        if (Date.now() - lastScrollTime > 10 * 60 * 1000) { // 10 minutes
+                            console.log("No scrolling detected for 10 minutes. Restarting the browser.");
+                            await resourceManager.release();
+                            resourceManagers[browserIndex] = null;
+                            await performAutomationTask(browserIndex, quadrant);
+                            break;
+                        }
+                    }
+                };
+
+                monitorScroll();
+
                 isPageError = false;
             } catch (e) {
                 console.log("Error while loading page:", e);
