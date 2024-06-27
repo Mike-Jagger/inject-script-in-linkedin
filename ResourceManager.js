@@ -4,10 +4,12 @@ const StealthPlugin = require('puppeteer-extra-plugin-stealth');
 puppeteer.use(StealthPlugin());
 
 class ResourceManager {
-    constructor(settings, quadrant) {
+    constructor(settings, quadrant, currentKeyWord) {
         this.browser = null;
+        this.page = null;
         this.settings = settings;
         this.quadrant = quadrant;
+        this.currentKeyWord = currentKeyWord;
         this.retries = 0;
         this.isReleased = false;
     }
@@ -50,8 +52,9 @@ class ResourceManager {
             if (this.isReleased) return;
             console.log("BROWSER CRASH");
             if (this.retries <= 3) {
+                // console.log("test");
                 this.retries += 1;
-                if (this.browser && this.browser.process() != null) this.browser.process().kill('SIGINT');
+                if (this.browser && this.browser.process() != null) this.browser.process().kill('SIGTERM');
                 await this.init();
             } else {
                 throw "BROWSER crashed more than 3 times";
