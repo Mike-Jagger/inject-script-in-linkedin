@@ -290,11 +290,15 @@ async function performAutomationTask(browserIndex, quadrant) {
 
         await page.goto(LOGIN_PAGE);
 
+        sleep(3000);
+
         await loadCookiesAndLocalStorage(page);
 
-        let isPageError = true;
+        resourceManager.browser.disconnect();
 
-        while(isPageError) {
+        let pageErrCount = 3;
+
+        while(pageErrCount) {
             try {
                 await page.goto('https://www.linkedin.com/');
 
@@ -358,12 +362,16 @@ async function performAutomationTask(browserIndex, quadrant) {
 
                 monitorScroll();
 
-                isPageError = false;
+                pageErrCount = 0;
             } catch (e) {
                 console.log("Error while loading page:", e);
-                await page.goto(LOGIN_PAGE);
+                try {
+                    await page.goto(LOGIN_PAGE);
+                } catch(e) {
+                    console.error("Error redirecting to login page (most likely browser crash): ", e);
+                }
                 sleep(2000);
-                isPageError = true;
+                pageErrCount--;
             }
         }
 
