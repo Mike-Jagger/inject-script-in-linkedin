@@ -7,6 +7,7 @@ puppeteer.use(StealthPlugin());
 class ResourceManager {
     constructor(settings, quadrant, currentKeyWord) {
         this.browser = null;
+        this.browserWSEndpoint = null;
         this.page = null;
         this.settings = settings;
         this.quadrant = quadrant;
@@ -19,6 +20,7 @@ class ResourceManager {
         this.isReleased = false;
         this.retries = 0;
         this.browser = await this.runBrowser();
+        this.browserWSEndpoint = this.browser.wsEndpoint();
         this.page = await this.createPage();
     }
 
@@ -55,7 +57,11 @@ class ResourceManager {
             console.log("BROWSER CRASH");
             if (this.retries <= 3) {
                 this.retries += 1;
-                if (this.browser && this.browser.process() != null) this.browser.process().kill('SIGTINT');
+
+                const browserToDisconnect = await puppeteer.connect({browserWSEndpoint: this.browserWSEndpoint});
+                if (browserToDisconnect) await browserToDisconnect.close();
+                if (browserToDisconnect && browserToDisconnect?.process() != null) browserToDisconnect.process().kill('SIGINT');
+                
                 await this.init();
             } else {
                 throw "BROWSER crashed more than 3 times";
