@@ -28,6 +28,7 @@ class ResourceManager {
         this.isReleased = false;
         this.retries = 0;
         this.browser = await this.runBrowser();
+        console.log(this.browser.process().pid);
         this.browserWSEndpoint = this.browser.wsEndpoint();
         this.page = await this.createPage();
 
@@ -49,16 +50,20 @@ class ResourceManager {
                 await injectScript(this.page, this.currentKeyWord);
 
                 // Monitor scrolling activity
+                let lastScrollPosition = 0;
                 let lastScrollTime = Date.now();
 
                 // Function to monitor the scrolling activity
                 const monitorScroll = async () => {
                     while (this.page) {
                         const newScrollPosition = await this.page.evaluate(() => window.scrollY);
-                        if (newScrollPosition > 0) {
+
+                        if (newScrollPosition !== lastScrollPosition) {
+                            lastScrollPosition = newScrollPosition;
                             lastScrollTime = Date.now();
                         }
-                        await sleep(10000); // Check every 10 seconds
+
+                        await sleep(2000); // Check every 10 seconds
                         if (Date.now() - lastScrollTime > 5 * 1000) { // 10 minutes
                             console.log("No scrolling detected for 10 minutes. Restarting the browser.");
                             if (!this.isReleased) {
@@ -95,6 +100,7 @@ class ResourceManager {
                     await page.goto(LOGIN_PAGE);
                 } catch(e) {
                     console.error("Error redirecting to login page (most likely browser crash): ", e);
+                    await this.release();
                 }
                 sleep(2000);
                 pageErrCount--;
@@ -104,9 +110,29 @@ class ResourceManager {
 
     async release() {
         this.isReleased = true;
+        if (this.page) {
+            try {
+                await this.page.close();
+            } catch (e) {
+                console.error("Error closing page: ", e);
+            }
+        }
         this.page = null;
-        if (this.browser) await this.browser.close();
-        if (this.browser?.process() != null) await this.browser.process().kill('SIGTERM');
+        if (this.browser) {
+            try {
+                await this.browser.close();
+            } catch (e) {
+                console.error("Error closing browser: ", e);
+            }
+        }
+        if (this.browser && this.browser.process() != null) {
+            try {
+                this.browser.process().kill('SIGTERM');
+            } catch (e) {
+                console.error("Error killing browser process: ", e);
+            }
+        }
+        this.browser = null;
     }
 
     async createPage(url) {
@@ -139,8 +165,8 @@ class ResourceManager {
                 const browserToDisconnect = await puppeteer.connect({browserWSEndpoint: this.browserWSEndpoint}) || null;
 
                 if (browserToDisconnect) await browserToDisconnect.close();
-                if (browserToDisconnect && browserToDisconnect?.process() != null) browserToDisconnect.process().kill('SIGINT');
-                if (this.page) this.page = null;
+                if (browserToDisconnect && browserToDisconnect.process() != null) browserToDisconnect.process().kill('SIGINT');
+                if (this.page) { this.page.close(); this.page = null };
 
                 if (!this.isReleased) await this.init();
             } else {
