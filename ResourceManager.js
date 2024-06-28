@@ -1,12 +1,16 @@
 const puppeteer = require('puppeteer-extra');
 const StealthPlugin = require('puppeteer-extra-plugin-stealth');
+const path = require('path');
+const fs = require('fs');
 // const randomUseragent = require('random-useragent');
 puppeteer.use(StealthPlugin());
 
 const { sleep } = require('./sleep');
 const { injectScript } = require('./task');
+const { acquireLock, releaseLock, updateKeywordsFromFile, moveToNextKeyword } = require('./manageKeywords');
 const { loadCookiesAndLocalStorage } = require('./loadCookiesAndLocalStorage');
 const LOGIN_PAGE = 'https://www.linkedin.com/login';
+const JSON_KEYWORDS = './testKeywords.json';
 
 class ResourceManager {
     constructor(settings, quadrant, currentKeyWord) {
@@ -55,10 +59,26 @@ class ResourceManager {
                             lastScrollTime = Date.now();
                         }
                         await sleep(10000); // Check every 10 seconds
-                        if (Date.now() - lastScrollTime > 10 * 60 * 1000) { // 10 minutes
+                        if (Date.now() - lastScrollTime > 5 * 1000) { // 10 minutes
                             console.log("No scrolling detected for 10 minutes. Restarting the browser.");
                             if (!this.isReleased) {
                                 await this.release();
+
+                                await acquireLock();
+                                try {
+                                    await updateKeywordsFromFile();
+                                    await moveToNextKeyword();
+                                } finally {
+                                    releaseLock();
+                                }
+
+                                // Load the current keyword
+                                const jsonKeywordsPath = path.resolve(__dirname, JSON_KEYWORDS);
+                                if (fs.existsSync(jsonKeywordsPath)) {
+                                    const jsonKeywords = JSON.parse(fs.readFileSync(jsonKeywordsPath, 'utf-8'));
+                                    this.currentKeyWord = jsonKeywords.currentKeyWord;
+                                }
+
                                 await this.init();
                             }
                             break;
