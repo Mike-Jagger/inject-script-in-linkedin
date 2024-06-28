@@ -33,6 +33,10 @@ class ResourceManager {
 
         await loadCookiesAndLocalStorage(this.page);
 
+        await this.page.evaluate(() => {
+            document.body.style.zoom = '67%';
+        });
+
         let pageErrCount = 3;
 
         while(pageErrCount && this.page) {
