@@ -1,8 +1,12 @@
 const puppeteer = require('puppeteer-extra');
 const StealthPlugin = require('puppeteer-extra-plugin-stealth');
 // const randomUseragent = require('random-useragent');
-const { task } = require('./task');
 puppeteer.use(StealthPlugin());
+
+const { sleep } = require('./sleep');
+const { injectScript } = require('./task');
+const { loadCookiesAndLocalStorage } = require('./loadCookiesAndLocalStorage');
+const LOGIN_PAGE = 'https://www.linkedin.com/login';
 
 class ResourceManager {
     constructor(settings, quadrant, currentKeyWord) {
@@ -22,10 +26,60 @@ class ResourceManager {
         this.browser = await this.runBrowser();
         this.browserWSEndpoint = this.browser.wsEndpoint();
         this.page = await this.createPage();
+
+        await this.page.goto(LOGIN_PAGE);
+
+        sleep(3000);
+
+        await loadCookiesAndLocalStorage(this.page);
+
+        let pageErrCount = 3;
+
+        while(pageErrCount && this.page) {
+            try {
+                await injectScript(this.page, this.currentKeyWord);
+
+                // Monitor scrolling activity
+                let lastScrollTime = Date.now();
+
+                // Function to monitor the scrolling activity
+                const monitorScroll = async () => {
+                    while (this.page) {
+                        const newScrollPosition = await this.page.evaluate(() => window.scrollY);
+                        if (newScrollPosition > 0) {
+                            lastScrollTime = Date.now();
+                        }
+                        await sleep(10000); // Check every 10 seconds
+                        if (Date.now() - lastScrollTime > 10 * 1000) { // 10 minutes
+                            console.log("No scrolling detected for 10 minutes. Restarting the browser.");
+                            if (!this.isReleased) {
+                                await this.release();
+                                await this.init();
+                            }
+                            break;
+                        }
+                    }
+                };
+
+                monitorScroll();
+                pageErrCount = 0;
+
+            } catch (e) {
+                console.log("Error while loading page:", e);
+                try {
+                    await page.goto(LOGIN_PAGE);
+                } catch(e) {
+                    console.error("Error redirecting to login page (most likely browser crash): ", e);
+                }
+                sleep(2000);
+                pageErrCount--;
+            }
+        }
     }
 
     async release() {
         this.isReleased = true;
+        this.page = null;
         if (this.browser) await this.browser.close();
         if (this.browser?.process() != null) await this.browser.process().kill('SIGTERM');
     }
@@ -57,11 +111,11 @@ class ResourceManager {
             console.log("BROWSER CRASH");
             if (this.retries <= 3) {
                 this.retries += 1;
-
-                const browserToDisconnect = await puppeteer.connect({browserWSEndpoint: this.browserWSEndpoint});
+                const browserToDisconnect = await puppeteer.connect({browserWSEndpoint: this.browserWSEndpoint}) || null;
+                
                 if (browserToDisconnect) await browserToDisconnect.close();
                 if (browserToDisconnect && browserToDisconnect?.process() != null) browserToDisconnect.process().kill('SIGINT');
-                
+                if (this.page) this.page = null;
                 await this.init();
             } else {
                 throw "BROWSER crashed more than 3 times";

@@ -247,8 +247,6 @@ async function performAutomationTask(browserIndex, quadrant) {
 
         const resourceManager = resourceManagers[browserIndex];
 
-        resourceManager.browser.disconnect();
-
         // Close browser after the specified duration
         console.log("\n4. MAKE CODE RUN FOR SPECIFIED HOURS\n");
 
