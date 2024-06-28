@@ -36,6 +36,7 @@ class ResourceManager {
         let pageErrCount = 3;
 
         while(pageErrCount && this.page) {
+            // this.browser.disconnect();
             try {
                 await injectScript(this.page, this.currentKeyWord);
 
@@ -109,14 +110,15 @@ class ResourceManager {
         bw.on('disconnected', async () => {
             if (this.isReleased) return;
             console.log("BROWSER CRASH");
-            if (this.retries <= 3) {
+            if (this.retries <= 3 && !this.isReleased) {
                 this.retries += 1;
                 const browserToDisconnect = await puppeteer.connect({browserWSEndpoint: this.browserWSEndpoint}) || null;
-                
+
                 if (browserToDisconnect) await browserToDisconnect.close();
                 if (browserToDisconnect && browserToDisconnect?.process() != null) browserToDisconnect.process().kill('SIGINT');
                 if (this.page) this.page = null;
-                await this.init();
+
+                if (!this.isReleased) await this.init();
             } else {
                 throw "BROWSER crashed more than 3 times";
             }
