@@ -2,3 +2,9 @@ software
 finance
 business
 engineering
+art
+sales
+marketing
+IT
+Networking
+Retail
