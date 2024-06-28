@@ -6,6 +6,7 @@ const readline = require('readline');
 const schedule = require('node-schedule');
 const { sleep } = require('./sleep');
 const { ResourceManager } = require('./ResourceManager');
+const { exec } = require('child_process');
 
 const COOKIES_PATH = './auth/testCookies.json';
 const SETTINGS_PATH = './testSettings.json';
@@ -251,13 +252,28 @@ async function performAutomationTask(browserIndex, quadrant) {
         console.log("\n4. MAKE CODE RUN FOR SPECIFIED HOURS\n");
 
         // await sleep(settings.amountOfHoursRun * 60 * 60 * 1000);
-        await sleep(10000); // Will run for 10 seconds only
+        await sleep(100000); // Will run for 10 seconds only
 
         console.log(`Program ending after executing for ${settings.amountOfHoursRun} hours`);
+        console.log(resourceManager.browser?.process().pid);
         await resourceManager.release();
     } else {
         console.log(`Browser already taken at index ${browserIndex}`);
     }
+}
+
+async function killChromeTesting() {
+    const scriptPath = path.resolve(__dirname, 'kill_chrome_testing.ps1');
+    exec(`powershell -ExecutionPolicy Bypass -File "${scriptPath}"`, (err, stdout, stderr) => {
+        if (err) {
+            console.error(`Error killing Chrome Testing processes: ${err}`);
+            return;
+        }
+        console.log(`Output: ${stdout}`);
+        if (stderr) {
+            console.error(`Error output: ${stderr}`);
+        }
+    });
 }
 
 async function main() {
@@ -374,8 +390,13 @@ async function main() {
 
         // Kill browser processes if not taken care of
         resourceManagers.forEach(async (browser) => { await browser.release() });
-        resourceManagers.splice(0, resourceManagers.length);
-
+        console.log(resourceManagers.splice(0, resourceManagers.length));
+        try {
+            await killChromeTesting();
+        } catch(e) {
+            console.error("Error terminating process: ", e);
+        }
+        sleep(10000);
         settings.numberOfTimesProgramShouldRun--;
     }
 }
