@@ -43,44 +43,48 @@ async function executeTestScriptInConsole(page, scriptPath) {
 }
 
 async function injectScript(page, currentKeyWord) {
-    await page.goto('https://www.linkedin.com/');
-
     try {
-        await page.waitForSelector('aside[id="msg-overlay"]', { timeout: 60000 });
-    } catch (e) {
-        console.error("No message overlay box found");
-    }
-    await sleep(2000);
+        await page.goto('https://www.linkedin.com/');
 
-    await page.evaluate(() => {
-        const msgOverlay = document.getElementById('msg-overlay');
-        console.log(msgOverlay);
-        if (msgOverlay) {
-            msgOverlay.style.display = 'none';
+        try {
+            await page.waitForSelector('aside[id="msg-overlay"]', { timeout: 60000 });
+        } catch (e) {
+            console.error("No message overlay box found");
         }
-    });
+        await sleep(2000);
 
-    await page.waitForSelector('button[aria-label="Click to start a search"]', { timeout: 5000 });
-    try {
-        await page.click('button[aria-label="Click to start a search"]');
+        await page.evaluate(() => {
+            const msgOverlay = document.getElementById('msg-overlay');
+            console.log(msgOverlay);
+            if (msgOverlay) {
+                msgOverlay.style.display = 'none';
+            }
+        });
+
+        await page.waitForSelector('button[aria-label="Click to start a search"]', { timeout: 5000 });
+        try {
+            await page.click('button[aria-label="Click to start a search"]');
+        } catch(e) {
+            console.error("No search button found");
+        }
+        await page.type('input[aria-label="Search"]', currentKeyWord.keyword, { delay: 200 });
+        await page.keyboard.press('Enter');
+        await sleep(10000);
+
+        try {
+            await page.waitForSelector('button[aria-label*="Show all filters"]', { timeout: 5000});
+        } catch(e) {
+            console.error("There is no 'show all filters button'");
+        }
+
+        await clickButton(page, ['Posts']);
+
+        // OPEN AND CLEAR CONSOLE
+        console.log("\n3. OPEN AND CLEAR CONSOLE\n");
+        await executeTestScriptInConsole(page, TEST_SCRIPT);
     } catch(e) {
-        console.error("No search button found");
+        console.error("Error executing injection:", e);
     }
-    await page.type('input[aria-label="Search"]', currentKeyWord.keyword, { delay: 200 });
-    await page.keyboard.press('Enter');
-    await sleep(10000);
-
-    try {
-        await page.waitForSelector('button[aria-label*="Show all filters"]', { timeout: 5000});
-    } catch(e) {
-        console.error("There is no 'show all filters button'");
-    }
-
-    await clickButton(page, ['Posts']);
-
-    // OPEN AND CLEAR CONSOLE
-    console.log("\n3. OPEN AND CLEAR CONSOLE\n");
-    await executeTestScriptInConsole(page, TEST_SCRIPT);
 }
 
 async function checkViews(page) {
