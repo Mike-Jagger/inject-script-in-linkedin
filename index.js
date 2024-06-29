@@ -243,20 +243,28 @@ async function performAutomationTask(browserIndex, quadrant) {
 
     // Initialize ResourceManager if not already initialized
     if (!resourceManagers[browserIndex]) {
-        resourceManagers[browserIndex] = await new ResourceManager(settings, quadrant, currentKeyWord);
-        await resourceManagers[browserIndex].init();
+        try {
+            resourceManagers[browserIndex] = await new ResourceManager(settings, quadrant, currentKeyWord);
+            await resourceManagers[browserIndex].init();
 
-        const resourceManager = resourceManagers[browserIndex];
+            const resourceManager = resourceManagers[browserIndex];
 
-        // Close browser after the specified duration
-        console.log("\n4. MAKE CODE RUN FOR SPECIFIED HOURS\n");
+            // Close browser after the specified duration
+            console.log("\n4. MAKE CODE RUN FOR SPECIFIED HOURS\n");
 
-        // await sleep(settings.amountOfHoursRun * 60 * 60 * 1000);
-        await sleep(100000); // Will run for 10 seconds only
+            // await sleep(settings.amountOfHoursRun * 60 * 60 * 1000);
+            await sleep(100000); // Will run for 10 seconds only
 
-        console.log(`Program ending after executing for ${settings.amountOfHoursRun} hours`);
-        console.log(resourceManager.browser?.process().pid);
-        await resourceManager.release();
+            console.log(`Program ending after executing for ${settings.amountOfHoursRun} hours`);
+            console.log("Ending:", resourceManager.browser?.process().pid);
+
+            // Monitor the stillRunning variable
+            const result = await resourceManager.exit();
+            // await resourceManager.release();
+            console.log("is process over:", result);
+        } catch(e) {
+            console.error("Error during process:", e);
+        }
     } else {
         console.log(`Browser already taken at index ${browserIndex}`);
     }
@@ -389,16 +397,19 @@ async function main() {
         );
 
         // Kill browser processes if not taken care of
-        resourceManagers.forEach(async (browser) => { await browser.release() });
+        await resourceManagers.forEach(async (browser) => { await browser.release() });
         console.log(resourceManagers.splice(0, resourceManagers.length));
+        await sleep(10000);
         try {
             await killChromeTesting();
         } catch(e) {
             console.error("Error terminating process: ", e);
         }
-        sleep(10000);
+        await sleep(10000);
         settings.numberOfTimesProgramShouldRun--;
     }
+
+    console.log("Done");
 }
 
 // Function to check if the current time is 8 AM
