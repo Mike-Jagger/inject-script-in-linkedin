@@ -8,12 +8,12 @@ const { sleep } = require('./sleep');
 const { ResourceManager } = require('./ResourceManager');
 const { exec } = require('child_process');
 
-const COOKIES_PATH = './auth/testCookies.json';
-const SETTINGS_PATH = './testSettings.json';
-const LOCAL_STORAGE_PATH = './auth/testLocalStorage.json';
+const COOKIES_PATH = './auth/cookies.json';
+const SETTINGS_PATH = './settings.json';
+const LOCAL_STORAGE_PATH = './auth/localStorage.json';
 const TXT_KEYWORDS = './keywords.txt';
-const JSON_KEYWORDS = './testKeywords.json';
-const historyPath = './testHistory.json';
+const JSON_KEYWORDS = './keywords.json';
+const historyPath = './history.json';
 const LOGIN_PAGE = 'https://www.linkedin.com/login';
 const LOCK_FILE = './lockfile';
 
