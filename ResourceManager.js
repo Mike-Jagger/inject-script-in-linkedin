@@ -2,6 +2,7 @@ const puppeteer = require('puppeteer-extra');
 const StealthPlugin = require('puppeteer-extra-plugin-stealth');
 const path = require('path');
 const fs = require('fs');
+// const { execSync } = require('child_process');
 // const randomUseragent = require('random-useragent');
 puppeteer.use(StealthPlugin());
 
@@ -22,13 +23,15 @@ class ResourceManager {
         this.currentKeyWord = currentKeyWord;
         this.retries = 0;
         this.isReleased = false;
+        this.stillRunning = false;
+        this.endCycle = false
     }
 
     async init() {
         this.isReleased = false;
         this.retries = 0;
         this.browser = await this.runBrowser();
-        console.log(this.browser.process().pid);
+        console.log("Starting:", this.browser.process().pid);
         this.browserWSEndpoint = this.browser.wsEndpoint();
         this.page = await this.createPage();
 
@@ -55,7 +58,8 @@ class ResourceManager {
 
                 // Function to monitor the scrolling activity
                 const monitorScroll = async () => {
-                    while (this.page) {
+                    this.stillRunning = true;
+                    while (this.page && !this.isReleased && !this.endCycle) {
                         const newScrollPosition = await this.page.evaluate(() => window.scrollY);
 
                         if (newScrollPosition !== lastScrollPosition) {
@@ -83,11 +87,15 @@ class ResourceManager {
                                     const jsonKeywords = JSON.parse(fs.readFileSync(jsonKeywordsPath, 'utf-8'));
                                     this.currentKeyWord = jsonKeywords.currentKeyWord;
                                 }
-
                                 await this.init();
                             }
                             break;
                         }
+                    }
+                    if (this.endCycle) {
+                        console.log("Test");
+                        this.stillRunning = false;
+                        await this.release();
                     }
                 };
 
@@ -128,6 +136,7 @@ class ResourceManager {
         if (this.browser && this.browser.process() != null) {
             try {
                 this.browser.process().kill('SIGTERM');
+                // execSync(`taskkill /PID ${this.browser.process().pid} /T /F`);
             } catch (e) {
                 console.error("Error killing browser process: ", e);
             }
@@ -138,6 +147,20 @@ class ResourceManager {
     async createPage(url) {
         if (!this.browser) this.browser = await this.runBrowser();
         return await this.createPageInBrowser(url);
+    }
+
+    // Add the exit method
+    async exit() {
+        this.endCycle = true;
+        // this.release();
+        return new Promise((resolve) => {
+            const interval = setInterval(() => {
+                if (!this.stillRunning) {
+                    clearInterval(interval);
+                    resolve(true);
+                }
+            }, 2000);
+        });
     }
 
     async runBrowser() {
