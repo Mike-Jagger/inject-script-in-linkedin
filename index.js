@@ -26,7 +26,7 @@ let settings = {
     numberOfTimesProgramShouldRun: -1
 };
 
-var log_file = require('fs').createWriteStream(__dirname + '/logs/log.txt', {flags : 'w'})
+var log_file = require('fs').createWriteStream(__dirname + '/logs/testLog.log', {flags : 'w'})
 
 function hook_stream(stream, callback) {
     var old_write = stream.write
