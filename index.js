@@ -7,16 +7,36 @@ const schedule = require('node-schedule');
 const { sleep } = require('./utils/sleep');
 const { ResourceManager } = require('./ResourceManager');
 const { exec } = require('child_process');
-const logger = require('./utils/logger').logger;
+// const logger = require('./utils/logger').logger;
 
-const COOKIES_PATH = './auth/testCookies.json';
-const SETTINGS_PATH = './testSettings.json';
-const LOCAL_STORAGE_PATH = './auth/testLocalStorage.json';
+const isDevEnv = true;
+
+let COOKIES_PATH;
+let SETTINGS_PATH;
+let LOCAL_STORAGE_PATH;
 const TXT_KEYWORDS = './keywords.txt';
-const JSON_KEYWORDS = './testKeywords.json';
-const historyPath = './testHistory.json';
+let JSON_KEYWORDS;
+let historyPath;
 const LOGIN_PAGE = 'https://www.linkedin.com/login';
 const LOCK_FILE = './lockfile';
+let logFile;
+
+if (isDevEnv) {
+    COOKIES_PATH = './auth/testCookies.json';
+    SETTINGS_PATH = './testSettings.json';
+    LOCAL_STORAGE_PATH = './auth/testLocalStorage.json';
+    JSON_KEYWORDS = './testKeywords.json';
+    historyPath = './testHistory.json';
+    logFile = 'testLog.log';
+
+} else {
+    COOKIES_PATH = './auth/cookies.json';
+    SETTINGS_PATH = './settings.json';
+    LOCAL_STORAGE_PATH = './auth/localStorage.json';
+    JSON_KEYWORDS = './keywords.json';
+    historyPath = './history.json';
+    logFile = `log-${Date.now().toString()}.log`;
+}
 
 // Load settings from JSON file
 let settings = {
@@ -26,7 +46,28 @@ let settings = {
     numberOfTimesProgramShouldRun: -1
 };
 
-var log_file = require('fs').createWriteStream(__dirname + '/logs/testLog.log', {flags : 'w'})
+function createLogFileIfNotExists(logFile) {
+    // Ensure the directory exists
+    const dir = path.dirname(logFile);
+    if (!fs.existsSync(dir)) {
+        fs.mkdirSync(dir, { recursive: true });
+    }
+
+    // Check if the file exists
+    if (!fs.existsSync(logFile)) {
+        // Create the file
+        fs.writeFileSync(logFile, '', 'utf8', (err) => {
+            if (err) throw err;
+            console.log(`Log file created: ${logFile}`);
+        });
+    } else {
+        console.log(`Log file already exists: ${logFile}`);
+    }
+}
+
+createLogFileIfNotExists(`./logs/${logFile}`);
+
+var log_file = require('fs').createWriteStream(__dirname + `/logs/${logFile}`, {flags : 'w'})
 
 function hook_stream(stream, callback) {
     var old_write = stream.write
