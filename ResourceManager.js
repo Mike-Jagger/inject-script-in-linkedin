@@ -120,8 +120,8 @@ class ResourceManager {
                 pageErrCount--;
             }
         }
-        this.release();
-        this.stillRunning = false;
+        // this.release();
+        // this.stillRunning = false;
     }
 
     async release() {
