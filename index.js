@@ -20,6 +20,7 @@ let historyPath;
 const LOGIN_PAGE = 'https://www.linkedin.com/login';
 const LOCK_FILE = './lockfile';
 let logFile;
+const dateRun = new Date().toISOString().replace(/:/g, '-');
 
 if (isDevEnv) {
     COOKIES_PATH = './auth/testCookies.json';
@@ -27,7 +28,7 @@ if (isDevEnv) {
     LOCAL_STORAGE_PATH = './auth/testLocalStorage.json';
     JSON_KEYWORDS = './testKeywords.json';
     historyPath = './testHistory.json';
-    logFile = 'testLog.log';
+    logFile = `testLog-${dateRun}.log`;
 
 } else {
     COOKIES_PATH = './auth/cookies.json';
@@ -35,7 +36,7 @@ if (isDevEnv) {
     LOCAL_STORAGE_PATH = './auth/localStorage.json';
     JSON_KEYWORDS = './keywords.json';
     historyPath = './history.json';
-    logFile = `log-${Date.now().toString()}.log`;
+    logFile = `log-${dateRun}.log`;
 }
 
 // Load settings from JSON file
@@ -356,6 +357,7 @@ async function main() {
     // console.log('Starting logger \n');
     // logger.info('Info service started');
     // logger.error('Service crashed');
+    console.log(dateRun);
 
     // SETTINGS
     console.log("\n0. SETTINGS\n");
