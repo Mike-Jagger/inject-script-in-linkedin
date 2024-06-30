@@ -50,56 +50,62 @@ class ResourceManager {
         while(pageErrCount && this.page) {
             // this.browser.disconnect();
             try {
-                await injectScript(this.page, this.currentKeyWord);
+                if (!this.endCycle) {
+                    await injectScript(this.page, this.currentKeyWord);
 
-                // Monitor scrolling activity
-                let lastScrollPosition = 0;
-                let lastScrollTime = Date.now();
+                    // Monitor scrolling activity
+                    let lastScrollPosition = 0;
+                    let lastScrollTime = Date.now();
 
-                // Function to monitor the scrolling activity
-                const monitorScroll = async () => {
-                    this.stillRunning = true;
-                    while (this.page && !this.isReleased && !this.endCycle) {
-                        const newScrollPosition = await this.page.evaluate(() => window.scrollY);
+                    // Function to monitor the scrolling activity
+                    const monitorScroll = async () => {
+                        this.stillRunning = true;
+                        while (this.page && !this.isReleased && !this.endCycle) {
+                            const newScrollPosition = await this.page.evaluate(() => window.scrollY);
 
-                        if (newScrollPosition !== lastScrollPosition) {
-                            lastScrollPosition = newScrollPosition;
-                            lastScrollTime = Date.now();
-                        }
-
-                        await sleep(2000); // Check every 10 seconds
-                        if (Date.now() - lastScrollTime > 5 * 1000) { // 10 minutes
-                            console.log("No scrolling detected for 10 minutes. Restarting the browser.");
-                            if (!this.isReleased) {
-                                await this.release();
-
-                                await acquireLock();
-                                try {
-                                    await updateKeywordsFromFile();
-                                    await moveToNextKeyword();
-                                } finally {
-                                    releaseLock();
-                                }
-
-                                // Load the current keyword
-                                const jsonKeywordsPath = path.resolve(__dirname, JSON_KEYWORDS);
-                                if (fs.existsSync(jsonKeywordsPath)) {
-                                    const jsonKeywords = JSON.parse(fs.readFileSync(jsonKeywordsPath, 'utf-8'));
-                                    this.currentKeyWord = jsonKeywords.currentKeyWord;
-                                }
-                                await this.init();
+                            if (newScrollPosition !== lastScrollPosition) {
+                                lastScrollPosition = newScrollPosition;
+                                lastScrollTime = Date.now();
                             }
-                            break;
-                        }
-                    }
-                    if (this.endCycle) {
-                        this.stillRunning = false;
-                        await this.release();
-                    }
-                };
 
-                monitorScroll();
-                pageErrCount = 0;
+                            await sleep(2000); // Check every 10 seconds
+                            if (Date.now() - lastScrollTime > 5 * 1000) { // 10 minutes
+                                console.log("No scrolling detected for 10 minutes. Restarting the browser.");
+                                if (!this.isReleased) {
+                                    await this.release();
+
+                                    await acquireLock();
+                                    try {
+                                        await updateKeywordsFromFile();
+                                        await moveToNextKeyword();
+                                    } finally {
+                                        releaseLock();
+                                    }
+
+                                    // Load the current keyword
+                                    const jsonKeywordsPath = path.resolve(__dirname, JSON_KEYWORDS);
+                                    if (fs.existsSync(jsonKeywordsPath)) {
+                                        const jsonKeywords = JSON.parse(fs.readFileSync(jsonKeywordsPath, 'utf-8'));
+                                        this.currentKeyWord = jsonKeywords.currentKeyWord;
+                                    }
+                                    await this.init();
+                                }
+                                break;
+                            }
+                        }
+                        if (this.endCycle) {
+                            await this.release();
+                            this.stillRunning = false;
+                        }
+                    };
+
+                    monitorScroll();
+                    pageErrCount = 0;
+                } else {
+                    await this.release();
+                    this.stillRunning = false;
+                    pageErrCount = 0;
+                }
 
             } catch (e) {
                 console.log("Error while loading page:", e);
@@ -108,11 +114,14 @@ class ResourceManager {
                 } catch(e) {
                     console.error("Error redirecting to login page (most likely browser crash): ", e);
                     await this.release();
+                    this.stillRunning = false;
                 }
                 sleep(2000);
                 pageErrCount--;
             }
         }
+        this.release();
+        this.stillRunning = false;
     }
 
     async release() {
