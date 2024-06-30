@@ -45,11 +45,11 @@ function hook_stream(stream, callback) {
 
 var unhook_stdout = hook_stream(process.stdout, function(string, encoding, fd) {
     log_file.write(string, encoding)
-})
+});
 
 var unhook_stderr = hook_stream(process.stderr, function(string, encoding, fd) {
     log_file.write(string, encoding)
-})
+});
 
 function loadSettings() {
     if (fs.existsSync(SETTINGS_PATH)) {
@@ -441,13 +441,8 @@ async function main() {
     }
 
     console.log("Done");
-    var unhook_stdout = hook_stream(process.stdout, function(string, encoding, fd) {
-        log_file.write(string, encoding)
-    });
-    
-    var unhook_stderr = hook_stream(process.stderr, function(string, encoding, fd) {
-        log_file.write(string, encoding)
-    });
+    unhook_stdout();
+    unhook_stderr();
 }
 
 // Function to check if the current time is 8 AM
