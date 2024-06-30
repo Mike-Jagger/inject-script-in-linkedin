@@ -1,8 +1,8 @@
 const os = require('os');
 const fs = require('fs');
-const { clickButton } = require('./clickButton');
+const { clickButton } = require('./utils/clickButton');
 const TEST_SCRIPT = './test.js';
-const { sleep } = require('./sleep');
+const { sleep } = require('./utils/sleep');
 
 async function executeTestScriptInConsole(page, scriptPath) {
     // Open the console

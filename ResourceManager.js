@@ -6,10 +6,10 @@ const fs = require('fs');
 // const randomUseragent = require('random-useragent');
 puppeteer.use(StealthPlugin());
 
-const { sleep } = require('./sleep');
+const { sleep } = require('./utils/sleep');
 const { injectScript } = require('./task');
 const { acquireLock, releaseLock, updateKeywordsFromFile, moveToNextKeyword } = require('./manageKeywords');
-const { loadCookiesAndLocalStorage } = require('./loadCookiesAndLocalStorage');
+const { loadCookiesAndLocalStorage } = require('./utils/loadCookiesAndLocalStorage');
 const LOGIN_PAGE = 'https://www.linkedin.com/login';
 const JSON_KEYWORDS = './testKeywords.json';
 

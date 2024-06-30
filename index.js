@@ -4,7 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const readline = require('readline');
 const schedule = require('node-schedule');
-const { sleep } = require('./sleep');
+const { sleep } = require('./utils/sleep');
 const { ResourceManager } = require('./ResourceManager');
 const { exec } = require('child_process');
 
