@@ -93,7 +93,6 @@ class ResourceManager {
                         }
                     }
                     if (this.endCycle) {
-                        console.log("Test");
                         this.stillRunning = false;
                         await this.release();
                     }
