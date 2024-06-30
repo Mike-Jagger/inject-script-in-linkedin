@@ -1,6 +1,2 @@
-testCookies.json
-testLocalStorage.json
-testSettings.json
-testKeywords.json
-testHistory.json
+test*
 node_modules
