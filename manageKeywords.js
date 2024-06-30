@@ -1,7 +1,7 @@
 const fs = require('fs');
 
 const path = require('path');
-const { sleep } = require('./sleep');
+const { sleep } = require('./utils/sleep');
 const TXT_KEYWORDS = './keywords.txt';
 const JSON_KEYWORDS = './testKeywords.json';
 const LOCK_FILE = './lockfile';
