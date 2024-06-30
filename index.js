@@ -26,6 +26,31 @@ let settings = {
     numberOfTimesProgramShouldRun: -1
 };
 
+var log_file = require('fs').createWriteStream(__dirname + '/logs/log.txt', {flags : 'w'})
+
+function hook_stream(stream, callback) {
+    var old_write = stream.write
+
+    stream.write = (function(write) {
+        return function(string, encoding, fd) {
+            write.apply(stream, arguments)  // comments this line if you don't want output in the console
+            callback(string, encoding, fd)
+        }
+    })(stream.write)
+
+    return function() {
+        stream.write = old_write
+    }
+}
+
+var unhook_stdout = hook_stream(process.stdout, function(string, encoding, fd) {
+    log_file.write(string, encoding)
+})
+
+var unhook_stderr = hook_stream(process.stderr, function(string, encoding, fd) {
+    log_file.write(string, encoding)
+})
+
 function loadSettings() {
     if (fs.existsSync(SETTINGS_PATH)) {
         const settingsData = JSON.parse(fs.readFileSync(SETTINGS_PATH, 'utf-8'));
@@ -287,8 +312,9 @@ async function killChromeTesting() {
 
 async function main() {
     // STARTING LOGGER
-    logger.info('Info service started');
-    logger.error('Service crashed');
+    // console.log('Starting logger \n');
+    // logger.info('Info service started');
+    // logger.error('Service crashed');
 
     // SETTINGS
     console.log("\n0. SETTINGS\n");
@@ -415,6 +441,13 @@ async function main() {
     }
 
     console.log("Done");
+    var unhook_stdout = hook_stream(process.stdout, function(string, encoding, fd) {
+        log_file.write(string, encoding)
+    });
+    
+    var unhook_stderr = hook_stream(process.stderr, function(string, encoding, fd) {
+        log_file.write(string, encoding)
+    });
 }
 
 // Function to check if the current time is 8 AM
