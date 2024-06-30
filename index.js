@@ -7,6 +7,7 @@ const schedule = require('node-schedule');
 const { sleep } = require('./utils/sleep');
 const { ResourceManager } = require('./ResourceManager');
 const { exec } = require('child_process');
+const logger = require('./utils/logger').logger;
 
 const COOKIES_PATH = './auth/testCookies.json';
 const SETTINGS_PATH = './testSettings.json';
@@ -285,6 +286,10 @@ async function killChromeTesting() {
 }
 
 async function main() {
+    // STARTING LOGGER
+    logger.info('Info service started');
+    logger.error('Service crashed');
+
     // SETTINGS
     console.log("\n0. SETTINGS\n");
     if (!fs.existsSync(SETTINGS_PATH)) {
