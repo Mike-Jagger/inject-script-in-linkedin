@@ -321,7 +321,7 @@ async function performAutomationTask(browserIndex, quadrant) {
             console.log("\n4. MAKE CODE RUN FOR SPECIFIED HOURS\n");
 
             // await sleep(settings.amountOfHoursRun * 60 * 60 * 1000);
-            await sleep(100000); // Will run for 10 seconds only
+            await sleep(1000000); // Will run for 10 seconds only
 
             console.log(`Program ending after executing for ${settings.amountOfHoursRun} hours`);
             console.log("Ending:", resourceManager.browser?.process().pid);

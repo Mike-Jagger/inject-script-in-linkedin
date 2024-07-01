@@ -2,7 +2,7 @@ const puppeteer = require('puppeteer-extra');
 const StealthPlugin = require('puppeteer-extra-plugin-stealth');
 const path = require('path');
 const fs = require('fs');
-// const { execSync } = require('child_process');
+const { execSync } = require('child_process');
 // const randomUseragent = require('random-useragent');
 puppeteer.use(StealthPlugin());
 
@@ -28,123 +28,129 @@ class ResourceManager {
     }
 
     async init() {
-        this.isReleased = false;
-        this.retries = 0;
-        this.browser = await this.runBrowser();
-        console.log("Starting:", this.browser.process().pid);
-        this.browserWSEndpoint = this.browser.wsEndpoint();
-        this.page = await this.createPage();
+        try {
+            this.isReleased = false;
+            this.retries = 0;
+            this.browser = await this.runBrowser();
+            console.log("Starting:", this.browser.process().pid);
+            this.browserWSEndpoint = this.browser.wsEndpoint();
+            this.page = await this.createPage();
 
-        await this.page.goto(LOGIN_PAGE);
+            await this.page.goto(LOGIN_PAGE);
 
-        sleep(3000);
+            sleep(3000);
 
-        await loadCookiesAndLocalStorage(this.page);
+            await loadCookiesAndLocalStorage(this.page);
 
-        await this.page.evaluate(() => {
-            document.body.style.zoom = '67%';
-        });
+            await this.page.evaluate(() => {
+                document.body.style.zoom = '67%';
+            });
 
-        let pageErrCount = 3;
+            let pageErrCount = 3;
 
-        while(pageErrCount && this.page) {
-            // this.browser.disconnect();
-            try {
-                if (!this.endCycle) {
-                    await injectScript(this.page, this.currentKeyWord);
-
-                    // Monitor scrolling activity
-                    let lastScrollPosition = 0;
-                    let lastScrollTime = Date.now();
-
-                    // Function to monitor the scrolling activity
-                    const monitorScroll = async () => {
-                        this.stillRunning = true;
-                        while (this.page && !this.isReleased && !this.endCycle) {
-                            const newScrollPosition = await this.page.evaluate(() => window.scrollY);
-
-                            if (newScrollPosition !== lastScrollPosition) {
-                                lastScrollPosition = newScrollPosition;
-                                lastScrollTime = Date.now();
-                            }
-
-                            await sleep(2000); // Check every 10 seconds
-                            if (Date.now() - lastScrollTime > 5 * 1000) { // 10 minutes
-                                console.log("No scrolling detected for 10 minutes. Restarting the browser.");
-                                if (!this.isReleased) {
-                                    await this.release();
-
-                                    await acquireLock();
-                                    try {
-                                        await updateKeywordsFromFile();
-                                        await moveToNextKeyword();
-                                    } finally {
-                                        releaseLock();
-                                    }
-
-                                    // Load the current keyword
-                                    const jsonKeywordsPath = path.resolve(__dirname, JSON_KEYWORDS);
-                                    if (fs.existsSync(jsonKeywordsPath)) {
-                                        const jsonKeywords = JSON.parse(fs.readFileSync(jsonKeywordsPath, 'utf-8'));
-                                        this.currentKeyWord = jsonKeywords.currentKeyWord;
-                                    }
-                                    await this.init();
-                                }
-                                break;
-                            }
-                        }
-                        if (this.endCycle) {
-                            await this.release();
-                            this.stillRunning = false;
-                        }
-                    };
-
-                    monitorScroll();
-                    pageErrCount = 0;
-                } else {
-                    await this.release();
-                    this.stillRunning = false;
-                    pageErrCount = 0;
-                }
-
-            } catch (e) {
-                console.log("Error while loading page:", e);
+            while(pageErrCount && this.page) {
+                // this.browser.disconnect();
                 try {
-                    await page.goto(LOGIN_PAGE);
-                } catch(e) {
-                    console.error("Error redirecting to login page (most likely browser crash): ", e);
-                    await this.release();
-                    this.stillRunning = false;
+                    if (!this.endCycle) {
+                        await injectScript(this.page, this.currentKeyWord);
+
+                        // Monitor scrolling activity
+                        let lastScrollPosition = 0;
+                        let lastScrollTime = Date.now();
+
+                        // Function to monitor the scrolling activity
+                        const monitorScroll = async () => {
+                            this.stillRunning = true;
+                            while (this.page && !this.isReleased && !this.endCycle) {
+                                const newScrollPosition = await this.page.evaluate(() => window.scrollY);
+
+                                if (newScrollPosition !== lastScrollPosition) {
+                                    lastScrollPosition = newScrollPosition;
+                                    lastScrollTime = Date.now();
+                                }
+
+                                await sleep(2000); // Check every 10 seconds
+                                if (Date.now() - lastScrollTime > 5 * 1000) { // 10 minutes
+                                    console.log("No scrolling detected for 10 minutes. Restarting the browser.");
+                                    if (!this.isReleased) {
+                                        await this.release();
+
+                                        await acquireLock();
+                                        try {
+                                            await updateKeywordsFromFile();
+                                            await moveToNextKeyword();
+                                        } finally {
+                                            releaseLock();
+                                        }
+
+                                        // Load the current keyword
+                                        const jsonKeywordsPath = path.resolve(__dirname, JSON_KEYWORDS);
+                                        if (fs.existsSync(jsonKeywordsPath)) {
+                                            const jsonKeywords = JSON.parse(fs.readFileSync(jsonKeywordsPath, 'utf-8'));
+                                            this.currentKeyWord = jsonKeywords.currentKeyWord;
+                                        }
+
+                                        await sleep(5000);
+                                        await this.init();
+                                    }
+                                    break;
+                                }
+                            }
+                            if (this.endCycle) {
+                                await this.release();
+                                this.stillRunning = false;
+                            }
+                        };
+
+                        monitorScroll();
+                        pageErrCount = 0;
+                    } else {
+                        await this.release();
+                        this.stillRunning = false;
+                        pageErrCount = 0;
+                    }
+
+                } catch (e) {
+                    console.log("Error while loading page:", e);
+                    try {
+                        await page.goto(LOGIN_PAGE);
+                    } catch(e) {
+                        console.error("Error redirecting to login page (most likely browser crash): ", e);
+                        await this.release();
+                        this.stillRunning = false;
+                    }
+                    sleep(2000);
+                    pageErrCount--;
                 }
-                sleep(2000);
-                pageErrCount--;
             }
+            // await this.release();
+            // this.stillRunning = false;
+        } catch(e) {
+            console.error("Error running init:", e);
         }
-        // this.release();
-        // this.stillRunning = false;
     }
 
     async release() {
         this.isReleased = true;
-        if (this.page) {
-            try {
-                await this.page.close();
-            } catch (e) {
-                console.error("Error closing page: ", e);
-            }
-        }
+        // if (this.page) {
+        //     try {
+                // await this.page.close();
+        //     } catch (e) {
+        //         console.error("Error closing page: ", e);
+        //     }
+        // }
         this.page = null;
-        if (this.browser) {
-            try {
-                await this.browser.close();
-            } catch (e) {
-                console.error("Error closing browser: ", e);
-            }
-        }
+        // if (this.browser) {
+        //     try {
+        //         await this.browser.close();
+        //     } catch (e) {
+        //         console.error("Error closing browser: ", e);
+        //     }
+        // }
         if (this.browser && this.browser.process() != null) {
             try {
-                this.browser.process().kill('SIGTERM');
-                // execSync(`taskkill /PID ${this.browser.process().pid} /T /F`);
+                // this.browser.process().kill('SIGTERM');
+                execSync(`taskkill /PID ${this.browser.process().pid} /T /F`);
             } catch (e) {
                 console.error("Error killing browser process: ", e);
             }
@@ -189,19 +195,23 @@ class ResourceManager {
         });
 
         bw.on('disconnected', async () => {
-            if (this.isReleased) return;
-            console.log("BROWSER CRASH");
-            if (this.retries <= 3 && !this.isReleased) {
-                this.retries += 1;
-                const browserToDisconnect = await puppeteer.connect({browserWSEndpoint: this.browserWSEndpoint}) || null;
+            try {
+                if (this.isReleased) return;
+                console.log("BROWSER CRASH");
+                if (this.retries <= 3 && !this.isReleased) {
+                    this.retries += 1;
+                    const browserToDisconnect = await puppeteer.connect({browserWSEndpoint: this.browserWSEndpoint}) || null;
 
-                if (browserToDisconnect) await browserToDisconnect.close();
-                if (browserToDisconnect && browserToDisconnect.process() != null) browserToDisconnect.process().kill('SIGINT');
-                if (this.page) { this.page.close(); this.page = null };
+                    if (browserToDisconnect) await browserToDisconnect.close();
+                    if (browserToDisconnect && browserToDisconnect.process() != null) browserToDisconnect.process().kill('SIGINT');
+                    // if (this.page) { this.page.close(); this.page = null };
 
-                if (!this.isReleased) await this.init();
-            } else {
-                throw "BROWSER crashed more than 3 times";
+                    if (!this.isReleased) await this.init();
+                } else {
+                    throw "BROWSER crashed more than 3 times";
+                }
+            } catch(e) {
+                console.error("Error while rerunning on disconnect:", e);
             }
         });
 
