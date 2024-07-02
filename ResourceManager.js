@@ -205,6 +205,7 @@ class ResourceManager {
                     if (browserToDisconnect) await browserToDisconnect.close();
                     if (browserToDisconnect && browserToDisconnect.process() != null) browserToDisconnect.process().kill('SIGINT');
                     // if (this.page) { this.page.close(); this.page = null };
+                    this.page = null
 
                     if (!this.isReleased) await this.init();
                 } else {
