@@ -139,35 +139,43 @@ async function setupSettings() {
 }
 
 async function loadCookiesAndLocalStorage(page) {
-    if (fs.existsSync(COOKIES_PATH)) {
-        const cookies = JSON.parse(fs.readFileSync(COOKIES_PATH, 'utf-8'));
-        for (const cookie of cookies) {
-            await page.setCookie(cookie);
-        }
-    }
-    if (fs.existsSync(LOCAL_STORAGE_PATH)) {
-        const localStorageData = JSON.parse(fs.readFileSync(LOCAL_STORAGE_PATH, 'utf-8'));
-        await page.evaluate(data => {
-            for (const [key, value] of Object.entries(data)) {
-                localStorage.setItem(key, value);
+    try {
+        if (fs.existsSync(COOKIES_PATH)) {
+            const cookies = JSON.parse(fs.readFileSync(COOKIES_PATH, 'utf-8'));
+            for (const cookie of cookies) {
+                await page.setCookie(cookie);
             }
-        }, localStorageData);
+        }
+        if (fs.existsSync(LOCAL_STORAGE_PATH)) {
+            const localStorageData = JSON.parse(fs.readFileSync(LOCAL_STORAGE_PATH, 'utf-8'));
+            await page.evaluate(data => {
+                for (const [key, value] of Object.entries(data)) {
+                    localStorage.setItem(key, value);
+                }
+            }, localStorageData);
+        }    
+    } catch(e) {
+        console.error("Error loading cookies to page: ", e);
     }
 }
 
 async function saveCookiesAndLocalStorage(page) {
-    const cookies = await page.cookies();
-    fs.writeFileSync(COOKIES_PATH, JSON.stringify(cookies, null, 2));
+    try {
+        const cookies = await page.cookies();
+        fs.writeFileSync(COOKIES_PATH, JSON.stringify(cookies, null, 2));
 
-    const localStorageData = await page.evaluate(() => {
-        let data = {};
-        for (let i = 0; i < localStorage.length; i++) {
-            let key = localStorage.key(i);
-            data[key] = localStorage.getItem(key);
-        }
-        return data;
-    });
-    fs.writeFileSync(LOCAL_STORAGE_PATH, JSON.stringify(localStorageData, null, 2));
+        const localStorageData = await page.evaluate(() => {
+            let data = {};
+            for (let i = 0; i < localStorage.length; i++) {
+                let key = localStorage.key(i);
+                data[key] = localStorage.getItem(key);
+            }
+            return data;
+        });
+        fs.writeFileSync(LOCAL_STORAGE_PATH, JSON.stringify(localStorageData, null, 2));
+    } catch(e) {
+        console.error("Error saving cookies:", e);
+    }
 }
 
 async function login() {
@@ -218,16 +226,24 @@ async function isLoginSuccessful(page) {
 
 // Function to acquire a lock
 async function acquireLock() {
-    while (fs.existsSync(LOCK_FILE)) {
-        await sleep(100);
-    }
-    fs.writeFileSync(LOCK_FILE, 'lock');
+    try {
+        while (fs.existsSync(LOCK_FILE)) {
+            await sleep(100);
+        }
+        fs.writeFileSync(LOCK_FILE, 'lock');
+    } catch (e) {
+        console.error("Error locking file:", e);
+    } 
 }
 
 // Function to release a lock
 function releaseLock() {
-    if (fs.existsSync(LOCK_FILE)) {
-        fs.unlinkSync(LOCK_FILE);
+    try {
+        if (fs.existsSync(LOCK_FILE)) {
+            fs.unlinkSync(LOCK_FILE);
+        }
+    } catch(e) {
+        console.error("Error releasing lock on file:", e);
     }
 }
 
