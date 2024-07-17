@@ -69,9 +69,9 @@ class ResourceManager {
                                     lastScrollTime = Date.now();
                                 }
 
-                                // await sleep(2000); // Check every 10 seconds
+                                // await sleep(10000); // Check every 10 seconds
                                 await sleep(2000); // Check every 10 seconds
-                                // if (Date.now() - lastScrollTime > 5 * 1000) { // 10 minutes
+                                // if (Date.now() - lastScrollTime > 10 * 60 * 1000) { // 10 minutes
                                 if (Date.now() - lastScrollTime > 5 * 1000) { // 10 minutes
                                     console.log("No scrolling detected for 10 minutes. Restarting the browser.");
                                     if (!this.isReleased) {
