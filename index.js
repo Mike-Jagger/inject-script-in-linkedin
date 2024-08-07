@@ -131,7 +131,7 @@ async function setupSettings() {
     settings.shouldBrowseInHeadless = (await askQuestion('Do you want to browse in headless mode? (Y/N): ')).toLowerCase() === 'y';
     settings.numberOfPagesOpened = parseInt(await askQuestion('How many browser windows do you want to open? (default: 4): ')) || 4;
     settings.amountOfHoursRun = parseInt(await askQuestion('How many hours should the program run? (default: 4): ')) || 4;
-    settings.numberOfTimesProgramShouldRun = parseInt(await askQuestion('How many times do you want the program to run for? (default: -1 [to run until forced stop])')) || -1;
+    settings.numberOfTimesProgramShouldRun = parseInt(await askQuestion('How many times do you want the program to run for? (default: -1 [to run until forced stop]): ')) || -1;
 
     rl.close();
 
@@ -337,7 +337,7 @@ async function performAutomationTask(browserIndex, quadrant) {
             console.log("\n4. MAKE CODE RUN FOR SPECIFIED HOURS\n");
 
             // await sleep(settings.amountOfHoursRun * 60 * 60 * 1000);
-            await sleep(100000); // Will run for 10 seconds only
+            await sleep(100000); // Will run for 100 seconds only
 
             console.log(`Program ending after executing for ${settings.amountOfHoursRun} hours`);
             console.log("Ending:", resourceManager.browser?.process().pid);
