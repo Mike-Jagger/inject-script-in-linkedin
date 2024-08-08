@@ -9,7 +9,7 @@ const { ResourceManager } = require('./ResourceManager');
 const { exec } = require('child_process');
 // const logger = require('./utils/logger').logger;
 
-const isDevEnv = true;
+let isDevEnv = false;
 
 let COOKIES_PATH;
 let SETTINGS_PATH;
@@ -529,7 +529,7 @@ async function main() {
 // Function to check if the current time is 8 AM
 function isTimeToRun() {
     const now = new Date();
-    return now.getHours() === 8 && now.getMinutes() === 0;
+    return now.getHours() === 19 && now.getMinutes() === 27;
 }
 
 // Function to set an interval to frequently check the time
@@ -545,7 +545,8 @@ function setFrequentCheckInterval() {
 
 // Function to set the daily schedule at 8 AM
 function setDailySchedule() {
-    schedule.scheduleJob('0 8 * * *', () => {
+    // schedule.scheduleJob('0 8 * * *', () => {
+    schedule.scheduleJob('17 19 * * *', () => {
         runMain();
     });
 }
@@ -565,6 +566,15 @@ if (isTimeToRun()) {
 
 // Manually run the script immediately if needed for testing
 if (process.argv.includes('--run-now')) {
+    isDevEnv = true;
+
+    COOKIES_PATH = './auth/testCookies.json';
+    SETTINGS_PATH = './testSettings.json';
+    LOCAL_STORAGE_PATH = './auth/testLocalStorage.json';
+    JSON_KEYWORDS = './testKeywords.json';
+    historyPath = './testHistory.json';
+    logFile = `testLog-${dateRun}.log`;
+
     (async () => {
         await main().catch(console.error);
         process.exit(0);
