@@ -1,6 +1,6 @@
-ONLY WORKS ON WINDOWS AND CMD NEEDS TO BE LOADED AS AN ADMIN
+- ONLY WORKS ON WINDOWS AND CMD NEEDS TO BE LOADED AS AN ADMIN
 
-
+- No compat for macos and linux yet
 
 I - Prerequisites:
 Ensure that you have nodejs and npm installed on your system. (Check their official website for instructions on installation)
