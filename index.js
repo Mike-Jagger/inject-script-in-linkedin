@@ -44,7 +44,8 @@ let settings = {
     shouldBrowseInHeadless: false,
     numberOfPagesOpened: 4,
     amountOfHoursRun: 4,
-    numberOfTimesProgramShouldRun: -1
+    numberOfTimesProgramShouldRun: -1,
+    maxNumberCookieLoginRetries: 3
 };
 
 function createLogFileIfNotExists(logFile) {
@@ -97,6 +98,7 @@ function loadSettings() {
     if (fs.existsSync(SETTINGS_PATH)) {
         const settingsData = JSON.parse(fs.readFileSync(SETTINGS_PATH, 'utf-8'));
         settings = settingsData.Settings;
+
         if (settings.numberOfTimesProgramShouldRun === -1) settings.numberOfTimesProgramShouldRun = Infinity;
     }
 }
@@ -192,7 +194,7 @@ async function login() {
     const password = await askQuestion('Enter your LinkedIn password: ');
     rl.close();
 
-    const browser = await puppeteer.launch({ headless: settings.shouldBrowseInHeadless });
+    const browser = await puppeteer.launch({ headless: false });
 
     const page = await browser.newPage();
 
@@ -374,11 +376,13 @@ async function main() {
     // logger.info('Info service started');
     // logger.error('Service crashed');
     console.log(dateRun);
+    let isFirstLogin = false;
 
     // SETTINGS
     console.log("\n0. SETTINGS\n");
     if (!fs.existsSync(SETTINGS_PATH)) {
         await setupSettings();
+        isFirstLogin = true;
     }
 
     loadSettings();
@@ -393,17 +397,30 @@ async function main() {
     await checkPage.goto(LOGIN_PAGE, { waitUntil: 'networkidle2' });
 
     let isCookiesLoaded = false;
-    try {
-        console.log("Loading cookies...");
-        await loadCookiesAndLocalStorage(checkPage);
-        await checkPage.goto('https://www.linkedin.com/feed/');
-        isCookiesLoaded = await isLoginSuccessful(checkPage);
-        if (isCookiesLoaded) {
-            console.log('Cookies and Local Storage loaded successfully.');
+
+    let cookieLoginRetries = settings.maxNumberCookieLoginRetries;
+
+    do {
+        try {
+            console.log("Loading cookies...");
+            await loadCookiesAndLocalStorage(checkPage);
+            await checkPage.goto('https://www.linkedin.com/feed/');
+            isCookiesLoaded = await isLoginSuccessful(checkPage);
+            
+            if (isCookiesLoaded) {
+                console.log('Cookies and Local Storage loaded successfully.');
+                cookieLoginRetries = 0;
+            }
+        } catch (error) {
+            console.error('Error loading cookies/local storage:', error);
         }
-    } catch (error) {
-        console.error('Error loading cookies/local storage:', error);
-    }
+
+        if (!isCookiesLoaded && !isFirstLogin) {
+            console.log('Retries left:', cookieLoginRetries-1);
+            cookieLoginRetries--;
+        }
+
+    } while (cookieLoginRetries && !isFirstLogin && !isCookiesLoaded);
 
     await CheckerBrowser.close(); // Close browser to get to main program
 
