@@ -211,6 +211,8 @@ async function login() {
         console.error("No two factor auth");
     }
 
+    sleep(10000);
+
     return {
         newPage: page,
         newBrowser: browser
