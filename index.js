@@ -332,7 +332,7 @@ async function performAutomationTask(browserIndex, quadrant) {
     // Initialize ResourceManager if not already initialized
     if (!resourceManagers[browserIndex]) {
         try {
-            resourceManagers[browserIndex] = await new ResourceManager(settings, quadrant, currentKeyWord);
+            resourceManagers[browserIndex] = await new ResourceManager(settings, quadrant, currentKeyWord, isDevEnv);
             await resourceManagers[browserIndex].init();
 
             const resourceManager = resourceManagers[browserIndex];
@@ -340,8 +340,11 @@ async function performAutomationTask(browserIndex, quadrant) {
             // Close browser after the specified duration
             console.log("\n4. MAKE CODE RUN FOR SPECIFIED HOURS\n");
 
-            // await sleep(settings.amountOfHoursRun * 60 * 60 * 1000);
-            await sleep(100000); // Will run for 100 seconds only
+            if(!isDevEnv) {
+                await sleep(settings.amountOfHoursRun * 60 * 60 * 1000);
+            } else {
+                await sleep(100000);
+            }
 
             console.log(`Program ending after executing for ${settings.amountOfHoursRun} hours`);
             console.log("Ending:", resourceManager.browser?.process().pid);

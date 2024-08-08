@@ -14,7 +14,7 @@ const LOGIN_PAGE = 'https://www.linkedin.com/login';
 const JSON_KEYWORDS = './testKeywords.json';
 
 class ResourceManager {
-    constructor(settings, quadrant, currentKeyWord) {
+    constructor(settings, quadrant, currentKeyWord, isDevEnv) {
         this.browser = null;
         this.browserWSEndpoint = null;
         this.page = null;
@@ -25,6 +25,7 @@ class ResourceManager {
         this.isReleased = false;
         this.stillRunning = false;
         this.endCycle = false
+        this.isDevEnv = isDevEnv
     }
 
     async init() {
@@ -38,7 +39,7 @@ class ResourceManager {
 
             await this.page.goto(LOGIN_PAGE);
 
-            sleep(3000);
+            await sleep(3000);
 
             await loadCookiesAndLocalStorage(this.page);
 
@@ -69,10 +70,13 @@ class ResourceManager {
                                     lastScrollTime = Date.now();
                                 }
 
-                                // await sleep(10000); // Check every 10 seconds
-                                await sleep(2000); // Check every 10 seconds
-                                // if (Date.now() - lastScrollTime > 10 * 60 * 1000) { // 10 minutes
-                                if (Date.now() - lastScrollTime > 5 * 1000) { // 10 minutes
+                                const checkTimer = this.isDevEnv ? 2000 : 10000;
+
+                                await sleep(checkTimer);
+
+                                const scrollTimeLimit = this.isDevEnv ? 5 * 1000 : 10 * 60 * 1000;
+                                
+                                if (Date.now() - lastScrollTime > scrollTimeLimit) {
                                     console.log("No scrolling detected for 10 minutes. Restarting the browser.");
                                     if (!this.isReleased) {
                                         await this.release();
@@ -121,7 +125,7 @@ class ResourceManager {
                         await this.release();
                         this.stillRunning = false;
                     }
-                    sleep(2000);
+                    await sleep(2000);
                     pageErrCount--;
                 }
             }
