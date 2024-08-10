@@ -129,10 +129,10 @@ class ResourceManager {
                     pageErrCount--;
                 }
             }
-            // await this.release();
-            // this.stillRunning = false;
         } catch(e) {
             console.error("Error running init:", e);
+            await this.release();
+            this.stillRunning = false;
         }
     }
 

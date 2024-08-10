@@ -355,6 +355,12 @@ async function performAutomationTask(browserIndex, quadrant) {
             console.log("is process over:", result);
         } catch(e) {
             console.error("Error during process:", e);
+
+            try {
+                if (resourceManagers[browserIndex]) await resourceManagers[browserIndex].release();
+            } catch(e) {
+                console.error("Error ending process after failure:", e);
+            }
         }
     } else {
         console.log(`Browser already taken at index ${browserIndex}`);
